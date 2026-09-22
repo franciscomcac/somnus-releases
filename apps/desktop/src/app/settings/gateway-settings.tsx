@@ -45,6 +45,7 @@ import { ConnectionsRegistrySection } from './connections-registry'
 import { CONTROL_TEXT } from './constants'
 import { ManagedUpdatesSection } from './managed-updates-section'
 import { EmptyState, ListRow, Pill, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
+import { SHOW_NOUS_CLOUD } from './somnus-flags'
 import { enrichSelectedSshHost, selectSshHost } from './ssh-host-selection'
 
 type Mode = 'local' | 'remote' | 'cloud' | 'ssh'
@@ -1264,14 +1265,18 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
             onSelect={() => setState(current => ({ ...current, mode: 'local' }))}
             title={g.localTitle}
           />
-          <ModeCard
-            active={state.mode === 'cloud'}
-            description={g.cloudDesc}
-            disabled={state.envOverride}
-            icon={Cloud}
-            onSelect={() => setState(current => ({ ...current, mode: 'cloud' }))}
-            title={g.cloudTitle}
-          />
+          {/* Somnus: Nous Cloud (portal sign-in) is not offered to customers; a
+              profile already in cloud mode still shows its card. */}
+          {SHOW_NOUS_CLOUD || state.mode === 'cloud' ? (
+            <ModeCard
+              active={state.mode === 'cloud'}
+              description={g.cloudDesc}
+              disabled={state.envOverride}
+              icon={Cloud}
+              onSelect={() => setState(current => ({ ...current, mode: 'cloud' }))}
+              title={g.cloudTitle}
+            />
+          ) : null}
           <ModeCard
             active={state.mode === 'remote'}
             description={g.remoteDesc}

@@ -36,6 +36,7 @@ import type {
 import { EnvVarActionsMenu, EnvVarActionsTrigger, EnvVarContextMenu } from './env-var-actions-menu'
 import { prettyName } from './helpers'
 import { Pill } from './primitives'
+import { SHOW_NOUS_MANAGED_TOOLS } from './somnus-flags'
 import { VoiceProviderFields } from './voice-provider-fields'
 
 interface ToolsetConfigPanelProps {
@@ -575,7 +576,11 @@ export function ToolsetConfigPanel({ toolset, onConfiguredChange, profile }: Too
     void refresh()
   }, [refresh])
 
-  const providers = useMemo(() => cfg?.providers ?? [], [cfg])
+  // Somnus: Nous-managed tool rows need a Nous Portal sign-in, which Somnus customers don't have.
+  const providers = useMemo(
+    () => (cfg?.providers ?? []).filter(p => SHOW_NOUS_MANAGED_TOOLS || !p.requires_nous_auth),
+    [cfg]
+  )
 
   // Default the expanded provider to the one actually active in config
   // (`is_active` / `cfg.active_provider`, mirroring the CLI picker), then the

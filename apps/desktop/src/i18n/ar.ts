@@ -652,7 +652,7 @@ export const ar = defineLocale({
       reactionsDesc: 'تفاعلات إيموجي بأسلوب iMessage — تفاعل مع الرسائل، ويمكن لـ Somnus التفاعل مع رسائلك.',
       tipsTitle: 'نصائح داخل التطبيق',
       tipsDesc:
-        'نصائح تظهر أحيانًا من التطبيق وHermes. تظهر كل نصيحة مرة واحدة. تُعطّل تلقائيًا بعد أول 30 يومًا من الاستخدام، ويمكنك تفعيلها مجددًا.',
+        'نصائح تظهر أحيانًا من التطبيق وSomnus. تظهر كل نصيحة مرة واحدة. تُعطّل تلقائيًا بعد أول 30 يومًا من الاستخدام، ويمكنك تفعيلها مجددًا.',
       tipsReset: count => `إظهار ${count} نصيحة مرة أخرى`,
       toursTitle: 'جولات إرشادية',
       toursDesc:
@@ -2520,10 +2520,15 @@ export const ar = defineLocale({
   },
   onboarding: {
     headerTitle: 'لنُعِدّ لك Somnus',
-    headerDesc: 'الصق مفتاح Somnus لبدء المحادثة.',
+    headerDesc: 'سجّل الدخول بحساب Somnus لبدء المحادثة.',
     somnusKeyTitle: 'الصق مفتاح Somnus',
     somnusKeyDesc: 'يربط المفتاح Somnus بجميع النماذج. تجده في حساب Somnus الخاص بك.',
     somnusKeyInvalid: 'لم يعمل هذا المفتاح. تحقّق منه وحاول مجددًا.',
+    somnusSignIn: 'تسجيل الدخول عبر Somnus',
+    somnusSignInDesc: 'سجّل الدخول أو أنشئ حسابًا مجانيًا في متصفحك، وسيتصل Somnus تلقائيًا.',
+    somnusSignInWaiting: 'بانتظار المتصفح…',
+    somnusUseKey: 'استخدام مفتاح بدلًا من ذلك',
+    somnusSignInFailed: 'لم يكتمل تسجيل الدخول. حاول مجددًا.',
     preparingInstall: 'يُكمل Somnus التثبيت. عادة ما يستغرق ذلك أقل من دقيقة في أول تشغيل.',
     starting: 'جار بدء Somnus...',
     lookingUpProviders: 'جار البحث عن المزوّدين...',

@@ -536,6 +536,7 @@ import {
 import { installWindowsSystemCaTrust } from './windows-system-ca'
 import { readWindowsUserEnvVar } from './windows-user-env'
 import { SOMNUS } from './somnus-brand'
+import { cancelSomnusSignIn, handleSomnusAuthDeepLink, startSomnusSignIn } from './somnus-signin'
 import { isPackagedInstallPath as isPackagedInstallPathUnderRoots } from './workspace-cwd'
 import { readWslWindowsClipboardImage } from './wsl-clipboard-image'
 import { resolvePickerDefaultPath, setActiveGatewayProfile, setWslBridgeProfileState } from './wsl-path-bridge'
@@ -1429,7 +1430,7 @@ if (IS_WINDOWS) {
 app.setAboutPanelOptions({
   applicationName: APP_NAME,
   applicationVersion: resolveHermesVersion(),
-  copyright: 'Copyright © 2026 Nous Research'
+  copyright: 'Copyright © 2026 Somnus · Includes Hermes Agent © Nous Research (MIT)'
 })
 
 // Custom scheme for streaming audio/video into the renderer. Local paths read
@@ -2324,6 +2325,12 @@ function getFirstRunSetupGate() {
 }
 
 async function waitForFirstRunSetupChoice(backend) {
+  // Somnus: customers always get the managed local engine; there is no
+  // "connect to an existing server" choice to make.
+  if (IS_PACKAGED) {
+    return 'continue-local'
+  }
+
   const gate = getFirstRunSetupGate()
 
   if (!gate.shouldGate(backend)) {
@@ -17917,6 +17924,9 @@ ipcMain.on('hermes:devtools:disable-f12', (_event, on) => {
   }
 })
 
+ipcMain.handle('somnus:sign-in:start', () => startSomnusSignIn(url => shell.openExternal(url)))
+ipcMain.handle('somnus:sign-in:cancel', () => cancelSomnusSignIn())
+
 ipcMain.handle('hermes:openExternal', (_event, url) => {
   if (!openExternalUrl(url)) {
     throw new Error('Invalid external URL')
@@ -18167,7 +18177,7 @@ function showAboutPanelFresh() {
       applicationVersion: skew.outOfSync
         ? `${resolveHermesVersion()} — app build out of date, update the desktop app`
         : resolveHermesVersion(),
-      copyright: 'Copyright © 2026 Nous Research'
+      copyright: 'Copyright © 2026 Somnus · Includes Hermes Agent © Nous Research (MIT)'
     })
     app.showAboutPanel()
   })
@@ -18515,7 +18525,7 @@ ipcMain.handle('hermes:vscode-theme:search', async (_event, query) => searchMark
 // ---------------------------------------------------------------------------
 const HERMES_PROTOCOL = DEV_SERVER ? `${SOMNUS.protocol}-dev` : SOMNUS.protocol
 /** Schemes accepted when parsing inbound URLs (dev accepts both). */
-const DEEPLINK_SCHEMES = DEV_SERVER ? ['hermes-dev', 'hermes'] : ['hermes']
+const DEEPLINK_SCHEMES = DEV_SERVER ? [`${SOMNUS.protocol}-dev`, SOMNUS.protocol] : [SOMNUS.protocol]
 let _pendingDeepLink = null
 let _rendererReadyForDeepLink = false
 // Set by sendOpenUpdatesRequested() when the renderer cannot hear it yet.
@@ -18560,6 +18570,19 @@ function handleDeepLink(url) {
     params[k] = v
   })
   const payload = { kind, name, params }
+
+  // Somnus: somnus://auth is the sign-in callback; it never reaches the renderer.
+  if (scheme === SOMNUS.protocol && handleSomnusAuthDeepLink(kind, params)) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+
+      mainWindow.focus()
+    }
+
+    return
+  }
 
   if (!_rendererReadyForDeepLink || !mainWindow || mainWindow.isDestroyed()) {
     _pendingDeepLink = payload

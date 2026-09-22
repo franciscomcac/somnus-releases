@@ -37,7 +37,8 @@ class CommandReply:
 def _exec_version(ctx: CommandContext) -> CommandReply:
     """Core /version text — the banner version label."""
     from hermes_cli.banner import format_banner_version_label
-    return CommandReply(format_banner_version_label())
+    # Somnus: name the product, keep the engine attribution + version.
+    return CommandReply(f"Somnus · built on the open-source {format_banner_version_label()}")
 
 
 def _exec_egress(ctx: CommandContext) -> CommandReply:

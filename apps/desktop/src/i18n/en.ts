@@ -3755,10 +3755,15 @@ export const en: Translations = {
 
   onboarding: {
     headerTitle: "Let's get you setup with Somnus",
-    headerDesc: 'Paste your Somnus key to start chatting.',
+    headerDesc: 'Sign in with your Somnus account to start chatting.',
     somnusKeyTitle: 'Paste your Somnus key',
     somnusKeyDesc: 'Your key connects Somnus to every model. You\'ll find it in your Somnus account.',
     somnusKeyInvalid: 'That key didn\'t work. Check it and try again.',
+    somnusSignIn: 'Sign in with Somnus',
+    somnusSignInDesc: 'Sign in or create a free account in your browser. Somnus connects automatically.',
+    somnusSignInWaiting: 'Waiting for your browser…',
+    somnusUseKey: 'Use a key instead',
+    somnusSignInFailed: 'Sign-in didn\'t finish. Try again.',
     preparingInstall: 'Somnus is finishing install. This usually takes under a minute on first run.',
     starting: 'Starting Somnus…',
     lookingUpProviders: 'Looking up providers...',

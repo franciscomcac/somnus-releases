@@ -39,6 +39,7 @@ import { refreshFleetRoster } from '@/store/fleet-roster'
 import { notify, notifyError } from '@/store/notifications'
 
 import { EmptyState, ListRow, Pill, SectionHeading, SettingsBreadcrumbContext, ToggleRow } from './primitives'
+import { SHOW_NOUS_CLOUD } from './somnus-flags'
 
 const KIND_ICONS: Record<DesktopConnectionKind, typeof Globe> = {
   cloud: Cloud,
@@ -767,8 +768,12 @@ export function ConnectionsRegistrySection() {
           <div className="grid grid-cols-2 gap-2 @2xl:grid-cols-4">
             {/* Kind is fixed once created (buttons disable on edit). On create
                 every kind is offered; Local is disabled while the managed
-                local entry exists (the registry holds at most one). */}
-            {(editor.id ? ([editor.kind] as const) : (['local', 'cloud', 'remote', 'ssh'] as const)).map(kind => (
+                local entry exists (the registry holds at most one).
+                Somnus: the Nous Cloud kind is hidden (SHOW_NOUS_CLOUD). */}
+            {(editor.id
+              ? [editor.kind]
+              : (['local', 'cloud', 'remote', 'ssh'] as const).filter(k => SHOW_NOUS_CLOUD || k !== 'cloud')
+            ).map(kind => (
               <Button
                 disabled={Boolean(editor.id) || (kind === 'local' && hasLocal)}
                 key={kind}

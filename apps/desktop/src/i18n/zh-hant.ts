@@ -2890,10 +2890,15 @@ export const zhHant = defineLocale({
 
   onboarding: {
     headerTitle: '開始設定 Somnus',
-    headerDesc: '貼上你的 Somnus 金鑰即可開始聊天。',
+    headerDesc: '使用你的 Somnus 帳戶登入即可開始聊天。',
     somnusKeyTitle: '貼上你的 Somnus 金鑰',
     somnusKeyDesc: '金鑰會將 Somnus 連線到所有模型。你可以在 Somnus 帳戶中找到它。',
     somnusKeyInvalid: '這個金鑰無效。請檢查後再試一次。',
+    somnusSignIn: '使用 Somnus 登入',
+    somnusSignInDesc: '在瀏覽器中登入或建立免費帳戶，Somnus 會自動連線。',
+    somnusSignInWaiting: '正在等待瀏覽器…',
+    somnusUseKey: '改用金鑰',
+    somnusSignInFailed: '登入未完成，請再試一次。',
     preparingInstall: 'Somnus 正在完成安裝。首次執行通常不到一分鐘。',
     starting: '正在啟動 Somnus…',
     lookingUpProviders: '正在查詢提供方...',

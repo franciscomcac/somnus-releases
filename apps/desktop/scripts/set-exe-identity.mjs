@@ -12,6 +12,12 @@
 // SeCreateSymbolicLinkPrivilege). That is an unfixable dead end — we do NOT
 // try to extract winCodeSign.
 //
+// Release signing is the one exception: scripts/windows-signing.mjs flips the
+// flag back on ONLY when signing credentials are in the environment, and pins
+// toolsets.winCodeSign=1.1.0 (zip bundle, no symlinks) or uses Azure's
+// PowerShell signer, neither of which touches winCodeSign-2.6.0.7z. See
+// apps/desktop/SIGNING.md.
+//
 // The cost of disabling signAndEditExecutable is that electron-builder also
 // skips rcedit, so the unpacked Hermes.exe keeps the stock Electron icon and
 // "Electron" taskbar name. This script restores the icon + identity by calling
@@ -41,6 +47,16 @@ import { existsSync } from 'node:fs'
 import { rcedit } from 'rcedit'
 
 import { isMain } from './utils.mjs'
+
+// PE version strings stamped onto the exe. Exported so a SIGNED build
+// (scripts/windows-signing.mjs), where electron-builder re-edits the resources
+// right before signing, writes the same identity (via build.copyright).
+const EXE_VERSION_STRINGS = Object.freeze({
+  ProductName: 'Somnus',
+  FileDescription: 'Somnus',
+  CompanyName: 'Somnus',
+  LegalCopyright: 'Copyright (c) 2026 Somnus. Includes Hermes Agent, Copyright (c) 2025 Nous Research (MIT).'
+})
 
 // A real-time file scanner (AV/EDR) holds a short exclusive handle on a freshly
 // written exe; rcedit's resource commit then fails with "Unable to commit
@@ -85,12 +101,7 @@ async function stampExeIdentity(
 
   const options = {
     icon,
-    'version-string': {
-      ProductName: 'Hermes',
-      FileDescription: 'Hermes',
-      CompanyName: 'Nous Research',
-      LegalCopyright: 'Copyright (c) 2026 Nous Research'
-    }
+    'version-string': { ...EXE_VERSION_STRINGS }
   }
 
   for (let attempt = 0; ; attempt += 1) {
@@ -110,7 +121,7 @@ async function stampExeIdentity(
   console.log('[set-exe-identity] done — Hermes icon + identity stamped')
 }
 
-export { RCEDIT_COMMIT_RETRY_DELAYS_MS, stampExeIdentity }
+export { EXE_VERSION_STRINGS, RCEDIT_COMMIT_RETRY_DELAYS_MS, stampExeIdentity }
 
 // CLI entry point: `node scripts/set-exe-identity.mjs <exe>`.
 if (isMain(import.meta.url)) {

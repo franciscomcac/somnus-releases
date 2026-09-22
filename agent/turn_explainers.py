@@ -102,34 +102,34 @@ _PERSISTENCE_CAUSE_EXPLANATIONS: Dict[str, str] = {
         "session id, then send your message again."
     ),
     "turn_lease": (
-        "the turn was stopped because another Hermes process "
+        "the turn was stopped because another Somnus process "
         "took over this session. Your reply was not saved — wait "
         "for the other process to finish, then send your message "
         "again."
     ),
     "locked": (
         "the turn was stopped because session storage was busy "
-        "(another Hermes process was writing to the state "
+        "(another Somnus process was writing to the state "
         "database). Your message should already be saved — "
         "please send it again in a moment."
     ),
     # The forensic runbook for both (WAL generations, manifest.json, sidecars) lives in the
     # logger.error at hermes_state.py::_raise_if_db_replaced — never in the chat reply.
     "replaced": (
-        "the session database file was replaced while Hermes was running, so this "
-        "message was not saved (a copy is kept in {home}/sessions/). Stop Hermes "
+        "the session database file was replaced while Somnus was running, so this "
+        "message was not saved (a copy is kept in {home}/sessions/). Stop Somnus "
         "(`hermes {profile_arg}gateway stop`), run `hermes {profile_arg}doctor` — not "
         "`hermes {profile_arg}doctor --fix`, which would repair the wrong file in place — "
         "then start it again and send your message once more. Advanced recovery steps are "
         "in the log."
     ),
     "deleted_wal": (
-        "another Hermes process still holds an old copy of the session database's write-ahead "
-        "log, so Hermes stopped writing to keep the file safe and this message was not saved (a "
-        "copy is kept in {home}/sessions/). Nothing is lost. Quit every Hermes process on this "
+        "another Somnus process still holds an old copy of the session database's write-ahead "
+        "log, so Somnus stopped writing to keep the file safe and this message was not saved (a "
+        "copy is kept in {home}/sessions/). Nothing is lost. Quit every Somnus process on this "
         "profile (Desktop app, `hermes {profile_arg}gateway stop`, dashboard, cron), run "
         "`hermes {profile_arg}doctor` — it names any process still holding the log — then start "
-        "Hermes again and send your message once more. Do not run `doctor --fix` or delete "
+        "Somnus again and send your message once more. Do not run `doctor --fix` or delete "
         "any state.db files while they run. Guide: {recovery_docs}"
     ),
     "corrupt": (
@@ -156,20 +156,19 @@ _PERSISTENCE_CAUSE_EXPLANATIONS: Dict[str, str] = {
         "is corrupt and could not be detached, so this message was not "
         "saved. The message store itself is not damaged: do not run "
         "recovery tools or restore a backup. Run `hermes {profile_arg}doctor --fix` "
-        "(or restart Hermes, which repairs the index on open), then "
+        "(or restart Somnus, which repairs the index on open), then "
         "send your message again."
     ),
     "disk": (
-        "Hermes couldn't save this conversation to disk, so it stopped rather than lose "
+        "Somnus couldn't save this conversation to disk, so it stopped rather than lose "
         "your messages. The disk is probably full: free some space (or fix the permissions "
         "on {home}/state.db), then send your message again."
     ),
 }
 _PERSISTENCE_DEFAULT_EXPLANATION = (
-    "Hermes couldn't save this conversation, so it stopped rather than lose your messages. "
-    "Possible causes: the drive is out of room, or another Hermes process is holding the "
-    "database. Close other Hermes windows, run `hermes {profile_arg}doctor` to check "
-    "storage, then send your message again."
+    "Somnus couldn't save this conversation, so it stopped rather than lose your messages. "
+    "Possible causes: the drive is out of room, or another Somnus process is holding the "
+    "database. Close other Somnus windows, then send your message again."
 )
 
 

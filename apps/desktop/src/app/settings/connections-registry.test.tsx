@@ -182,7 +182,8 @@ describe('ConnectionsRegistrySection', () => {
 
     const localKind = screen.getByRole('button', { name: 'Local' }) as HTMLButtonElement
     expect(localKind.disabled).toBe(true)
-    expect(screen.getByRole('button', { name: 'Hermes Cloud' })).toBeTruthy()
+    // Somnus: the Nous Cloud kind is hidden (SHOW_NOUS_CLOUD).
+    expect(screen.queryByRole('button', { name: 'Somnus Cloud' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Remote gateway' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'SSH' })).toBeTruthy()
   })

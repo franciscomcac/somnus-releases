@@ -137,7 +137,17 @@ export function interpretRuntimeReadiness(
   const checksDisagree =
     typeof setupConfigured === 'boolean' && typeof runtimeOk === 'boolean' && setupConfigured !== runtimeOk
 
+  // Somnus: the only acceptable route is the Somnus gateway, configured as a
+  // custom endpoint by the Somnus key screen. Credentials the engine discovers
+  // elsewhere on the machine (e.g. a Claude Code login) must not count, or the
+  // customer skips the key screen and chats on someone else's account.
+  const somnusRoute = (signals.runtime?.provider ?? '').trim().toLowerCase() === 'custom'
+
   if (typeof runtimeOk === 'boolean') {
+    if (runtimeOk && !somnusRoute) {
+      return { ...route, checksDisagree, ready: false, reason: defaultReason, source: 'runtime_check' }
+    }
+
     if (runtimeOk) {
       return {
         ...route,

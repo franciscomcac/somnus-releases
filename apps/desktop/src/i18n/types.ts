@@ -3199,6 +3199,11 @@ export interface Translations {
     somnusKeyTitle: string
     somnusKeyDesc: string
     somnusKeyInvalid: string
+    somnusSignIn: string
+    somnusSignInDesc: string
+    somnusSignInWaiting: string
+    somnusUseKey: string
+    somnusSignInFailed: string
     preparingInstall: string
     starting: string
     lookingUpProviders: string

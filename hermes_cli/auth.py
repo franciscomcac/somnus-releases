@@ -1561,12 +1561,10 @@ def resolve_provider(
             return "bedrock"
     except ImportError:
         pass  # boto3 not installed
-    from hermes_constants import display_hermes_home
+    # Somnus: customers only use the desktop app with the Somnus gateway — no CLI/Nous-tier advice.
     raise AuthError(
-        "Hermes is not connected to any AI provider yet. Run `hermes model` to pick one (the free "
-        "Nous tier needs no API key), type `/login` in chat, or add a key with "
-        f"`hermes auth add <provider>`. (Advanced: put an API key such as OPENROUTER_API_KEY in "
-        f"{display_hermes_home()}/.env.)",
+        "Somnus is not connected to any AI provider yet. Open Settings to set up the model "
+        "provider, then try again.",
         code="no_provider_configured")
 
 

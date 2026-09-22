@@ -93,6 +93,9 @@ vi.mock('@/store/activity', () => ({
   upsertDesktopActionTask: vi.fn()
 }))
 
+// Somnus: these tests exercise the upstream Nous-managed rows, which Somnus hides by default.
+vi.mock('./somnus-flags', () => ({ SHOW_NOUS_CLOUD: true, SHOW_NOUS_MANAGED_TOOLS: true }))
+
 function config(overrides: Partial<ToolsetConfig> = {}): ToolsetConfig {
   return {
     name: 'tts',

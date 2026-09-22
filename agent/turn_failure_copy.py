@@ -149,7 +149,7 @@ def is_max_iteration_handoff(result: Any) -> bool:
 _NEXT_STEPS_RETRY = "Wait a minute and send /retry, or switch models with /model."
 _NEXT_STEPS_LOOP = (
     "Your message is saved. Send `continue` to try again, or start a new session with /new. "
-    "If it happens again, run `hermes doctor` and share the error details."
+    "If it happens again, type /logs and share the error details."
 )
 
 # Lead sentence per classifier reason once retries and fallback are exhausted.
@@ -165,19 +165,19 @@ _EXHAUSTED_DEFAULT_LEAD = "{label} didn't answer after {attempts} attempts"
 # Terminal copy for a non-retryable provider rejection, keyed by classifier reason.
 _NONRETRYABLE_COPY: Dict[str, str] = {
     FailoverReason.model_not_found.value: (
-        "Model '{model}' isn't available on {label}. Pick a different model with /model "
-        "(or `hermes model` in a terminal).{prefix_hint}"
+        "Model '{model}' isn't available on {label}. Pick a different model with /model."
+        "{prefix_hint}"
     ),
     FailoverReason.format_error.value: (
         "{label} rejected this request as malformed, so the model didn't answer. Start a clean "
-        "session with /new or switch models with /model; if it keeps happening, run `hermes doctor`."
+        "session with /new or switch models with /model."
     ),
     FailoverReason.role_alternation.value: (
         "{label} requires user and assistant turns to strictly alternate and rejected this "
         "conversation's shape. Start a clean session with /new or switch models with /model."
     ),
     FailoverReason.ssl_cert_verification.value: (
-        "Hermes couldn't verify {label}'s security certificate, so the connection was refused. "
+        "Somnus couldn't verify {label}'s security certificate, so the connection was refused. "
         "This is usually a corporate proxy or an outdated certificate store on this computer — "
         "see the terminal or `{home}/logs/agent.log` for the exact fix, or try another provider "
         "with /model."
@@ -200,7 +200,7 @@ _AUTH_COPY: Dict[str, str] = {
     "oauth": "{label} rejected your sign-in, so the model can't be reached. Sign in again: `{relogin}`.",
     "api_key": (
         "{label} rejected your API key, so the model can't be reached. Update it in "
-        "Settings → Providers, or run `hermes setup` in a terminal."
+        "Settings → Providers."
     ),
 }
 
@@ -245,13 +245,13 @@ def failure_cause_gloss(reason: Any, *, subject: str = "it", possessive: str = "
 # (``empty_response`` is worded by agent/turn_explainers.py, ``session_busy`` by the lease).
 _FAILURE_CODE_COPY: Dict[str, str] = {
     "context_overflow": (
-        "This conversation has grown too long for {model} to read, and Hermes couldn't shrink "
+        "This conversation has grown too long for {model} to read, and Somnus couldn't shrink "
         "it enough automatically. Start a new session with /new (your history is kept), or try "
         "/compress once more. Switching to a model with a bigger context window also works."
     ),
     "truncated": (
         "The model's reply was cut off before it finished (it hit its output length limit), so "
-        "Hermes didn't run the incomplete action. Nothing was changed. Send `continue`, ask for "
+        "Somnus didn't run the incomplete action. Nothing was changed. Send `continue`, ask for "
         "the work in smaller steps, or raise max_tokens for this model."
     ),
     "invalid_response": (
@@ -259,11 +259,11 @@ _FAILURE_CODE_COPY: Dict[str, str] = {
         "or rate-limiting you. " + _NEXT_STEPS_RETRY + "\n\nDetails: {detail}"
     ),
     "loop_error": (
-        "Hermes hit repeated errors and stopped this turn so it wouldn't keep retrying. "
+        "Somnus hit repeated errors and stopped this turn so it wouldn't keep retrying. "
         + _NEXT_STEPS_LOOP + "\n\nDetails: {detail}"
     ),
     "interpreter_shutdown": (
-        "Hermes was shutting down and stopped this turn. Your conversation is saved — reopen "
+        "Somnus was shutting down and stopped this turn. Your conversation is saved — reopen "
         "it{resume} and send your message again."
     ),
 }
@@ -273,7 +273,7 @@ _FAILURE_CODE_COPY: Dict[str, str] = {
 _ONE_OFF_COPY: Dict[str, str] = {
     "payload_too_large": (
         "This conversation (including attachments) has grown too large to send to {model}, and "
-        "Hermes couldn't shrink it enough automatically. Start a new session with /new (your "
+        "Somnus couldn't shrink it enough automatically. Start a new session with /new (your "
         "history is kept), or try /compress once more."
     ),
     "compression_disabled": (
@@ -286,10 +286,10 @@ _ONE_OFF_COPY: Dict[str, str] = {
     # message must stay in the transcript and the session must not be auto-reset.
     "server_context_rejection": (
         "The model server rejected this request as too large, but this conversation is only "
-        "about {tokens:,} tokens — well under the {window:,}-token window Hermes knows for "
+        "about {tokens:,} tokens — well under the {window:,}-token window Somnus knows for "
         "{model} — so shrinking it would not help. Another request on the same server (for "
         "example a background memory review from an earlier session) was probably holding its "
-        "capacity, or the server runs {model} with a smaller window than Hermes assumes. Wait a "
+        "capacity, or the server runs {model} with a smaller window than Somnus assumes. Wait a "
         "moment and send /retry; if it keeps happening, check the server's context setting."
     ),
     "stream_dropped_tool_call": (
@@ -299,7 +299,7 @@ _ONE_OFF_COPY: Dict[str, str] = {
     ),
     # Rides failure_reason="loop_error" (advisory; the turn is incomplete, not failed).
     "local_processing_error": (
-        "Hermes hit an internal error while handling the model's reply and stopped this turn. "
+        "Somnus hit an internal error while handling the model's reply and stopped this turn. "
         + _NEXT_STEPS_LOOP + "\n\nDetails: {detail}"
     ),
     "reasoning_only": (
@@ -335,10 +335,8 @@ def exhausted_copy(reason: str, *, label: str, attempts: int, summary: str, rese
                      "Send /retry after that, or switch models with /model.")
     else:
         situation = f"it looks temporarily unavailable. {_NEXT_STEPS_RETRY}"
-    return (
-        f"{lead} — {situation} To avoid this in future, "
-        f"add a backup provider with `hermes fallback add`.\n\nProvider said: {summary}"
-    )
+    # Somnus: no `hermes fallback add` advice — customers have one managed provider.
+    return f"{lead} — {situation}\n\nProvider said: {summary}"
 
 
 def limit_reset_copy(resets_at: float, now: Optional[float] = None) -> str:

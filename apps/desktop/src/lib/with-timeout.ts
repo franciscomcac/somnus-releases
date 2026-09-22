@@ -65,3 +65,116 @@ export function withTimeout<T>(
     )
   })
 }
+
+/** Hard ceiling for a primary-backend boot wait that main keeps reporting
+ * progress on. A first launch runs the full install (clone, Python, venv,
+ * dependencies) before the backend even spawns; on a slow network that can
+ * take many minutes, all of it visible as live progress. */
+export const BACKEND_BOOT_MAX_WAIT_MS = 20 * 60_000
+
+/** Signals a withStallTimeout watcher feeds back: `touch` restarts the stall
+ * clock (main just reported progress); `hold(true)` pauses it entirely (a
+ * phase with its own progress UI and failure path, such as the first-run
+ * install, is running) and `hold(false)` resumes it with a fresh budget. */
+export interface StallTimeoutActivity {
+  hold: (held: boolean) => void
+  touch: () => void
+}
+
+/** Like withTimeout, but the budget bounds SILENCE rather than total time:
+ * the clock restarts on every `touch` and is suspended while held, so a slow
+ * but visibly progressing wait never trips it, while a wedged one still
+ * fails after `stallMs`. `maxMs` caps the total regardless of activity.
+ * `watch` subscribes to activity and returns its unsubscribe, which runs once
+ * the wait settles either way. */
+export function withStallTimeout<T>(
+  promise: Promise<T>,
+  options: {
+    maxMs?: number
+    message: string
+    stallMs: number
+    watch: (activity: StallTimeoutActivity) => () => void
+  }
+): Promise<T> {
+  const { maxMs, message, stallMs, watch } = options
+
+  return new Promise<T>((resolve, reject) => {
+    let settled = false
+    let held = false
+    let stallTimer: ReturnType<typeof setTimeout> | null = null
+    let maxTimer: ReturnType<typeof setTimeout> | null = null
+    let unwatch: (() => void) | null = null
+
+    const clearStall = () => {
+      if (stallTimer !== null) {
+        clearTimeout(stallTimer)
+        stallTimer = null
+      }
+    }
+
+    const finish = (settle: () => void) => {
+      if (settled) {
+        return
+      }
+
+      settled = true
+      clearStall()
+
+      if (maxTimer !== null) {
+        clearTimeout(maxTimer)
+        maxTimer = null
+      }
+
+      try {
+        unwatch?.()
+      } catch {
+        // a failing unsubscribe must not mask the outcome
+      }
+
+      settle()
+    }
+
+    const timeOut = () => finish(() => reject(new TimeoutError(message)))
+
+    const armStall = () => {
+      clearStall()
+
+      if (!settled && !held) {
+        stallTimer = setTimeout(timeOut, stallMs)
+      }
+    }
+
+    armStall()
+
+    if (maxMs !== undefined) {
+      maxTimer = setTimeout(timeOut, maxMs)
+    }
+
+    try {
+      const off = watch({
+        hold: next => {
+          held = next
+          armStall()
+        },
+        touch: () => {
+          if (!held) {
+            armStall()
+          }
+        }
+      })
+
+      if (settled) {
+        off()
+      } else {
+        unwatch = off
+      }
+    } catch {
+      // No activity feed: degrade to a plain stall budget.
+    }
+
+    Promise.resolve(promise).then(
+      value => finish(() => resolve(value)),
+      err => finish(() => reject(err))
+    )
+  })
+}

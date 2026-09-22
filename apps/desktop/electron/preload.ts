@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   // Launch-flag fact: skip the first-run film (HERMES_SKIP_INTRO=1 or
   // --skip-intro). Rehearsal aid for the guided chat behind it.
   skipIntro: launchFlags?.skipIntro === true,
+  // Somnus: browser sign-in handoff; resolves with the customer's gateway key.
+  somnusSignIn: () => ipcRenderer.invoke('somnus:sign-in:start'),
+  somnusCancelSignIn: () => ipcRenderer.invoke('somnus:sign-in:cancel'),
   getConnection: (profile, opts) => ipcRenderer.invoke('hermes:connection', profile, opts),
   // Registry-scoped backend resolution: { connectionId, profile } → descriptor.
   getConnectionFor: payload => ipcRenderer.invoke('hermes:connection:for', payload),

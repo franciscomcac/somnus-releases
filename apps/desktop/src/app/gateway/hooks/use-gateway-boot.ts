@@ -20,7 +20,15 @@ import {
   LIVENESS_REPROBE_DELAY_MS
 } from '@/lib/gateway-liveness-policy'
 import { resolveDesktopGatewayWsUrl } from '@/lib/gateway-ws-url'
-import { BACKEND_BOOT_WAIT_TIMEOUT_MS, RECONNECT_ATTEMPT_TIMEOUT_MS, withTimeout } from '@/lib/with-timeout'
+import {
+  BACKEND_BOOT_MAX_WAIT_MS,
+  BACKEND_BOOT_WAIT_TIMEOUT_MS,
+  isTimeoutError,
+  RECONNECT_ATTEMPT_TIMEOUT_MS,
+  type StallTimeoutActivity,
+  withStallTimeout,
+  withTimeout
+} from '@/lib/with-timeout'
 import {
   $desktopBoot,
   applyDesktopBootProgress,
@@ -342,6 +350,62 @@ export function useGatewayBoot({
         return snapshot?.retryable === true
       } catch {
         return false
+      }
+    }
+
+    // The primary-connection request of the latest boot() attempt, kept so a
+    // boot that timed out waiting on it can recover when it settles late.
+    let connectionWait: null | Promise<HermesConnection> = null
+
+    // Activity feed for boot()'s connection wait (see withStallTimeout).
+    // Every boot-progress report from main restarts the stall clock; the
+    // first-run install holds it for as long as it runs, since install stages
+    // (a large dependency download) can go quiet for minutes and the install
+    // overlay owns that phase's progress and failure reporting. Progress
+    // touches arrive through the single onBootProgress subscription below.
+    let bootWaitActivity: null | StallTimeoutActivity = null
+
+    const watchBootActivity = (activity: StallTimeoutActivity) => {
+      let sawBootstrapEvent = false
+
+      bootWaitActivity = activity
+
+      const offBootstrap =
+        desktop.onBootstrapEvent?.(ev => {
+          sawBootstrapEvent = true
+
+          if (ev.type === 'manifest' || (ev.type === 'setup-choice' && ev.active)) {
+            activity.hold(true)
+          } else if (
+            ev.type === 'complete' ||
+            ev.type === 'failed' ||
+            ev.type === 'dismissed' ||
+            ev.type === 'unsupported-platform' ||
+            ev.type === 'setup-choice'
+          ) {
+            activity.hold(false)
+          } else {
+            activity.touch()
+          }
+        }) ?? (() => undefined)
+
+      // The window can mount after the install already started; a live event
+      // supersedes this snapshot so a late read can't re-hold a finished one.
+      void desktop
+        .getBootstrapState?.()
+        .then(state => {
+          if (!sawBootstrapEvent && (state?.active || state?.setupChoice)) {
+            activity.hold(true)
+          }
+        })
+        .catch(() => undefined)
+
+      return () => {
+        if (bootWaitActivity === activity) {
+          bootWaitActivity = null
+        }
+
+        offBootstrap()
       }
     }
 
@@ -865,6 +929,7 @@ export function useGatewayBoot({
 
     const offBootProgress = desktop.onBootProgress(payload => {
       bootSnapshotSuperseded = true
+      bootWaitActivity?.touch()
       onBootProgress(payload)
     })
 
@@ -1290,6 +1355,8 @@ export function useGatewayBoot({
       // later initialization errors must not be reclassified as boot dials.
       let stage: 'resolving' | 'minting' | 'dialing' | 'connected' = 'resolving'
 
+      connectionWait = null
+
       try {
         // A profile-pinned helper window (the HUD) dials its target profile's
         // backend directly — ensureBackend spawns/reuses it from the pool.
@@ -1298,11 +1365,25 @@ export function useGatewayBoot({
         // round-trip must not hang "Starting Somnus…" forever. Initial boot
         // rides out a full backend cold spawn, so it gets the shared 45s
         // backend-boot budget, not the 20s reconnect budget.
-        const conn = await withTimeout(
-          getWindowBackend(true),
-          BACKEND_BOOT_WAIT_TIMEOUT_MS,
-          'Timed out connecting to Somnus backend'
-        )
+        //
+        // That budget bounds main going SILENT, not total time: main's
+        // getConnection() also carries the first-run install (clone, Python,
+        // venv, dependencies — minutes on a slow network) before the backend
+        // even spawns. A flat 45s clock started here expired mid-install and
+        // painted "didn't answer in time" over a healthy first launch. The
+        // clock now restarts on each boot-progress report, pauses while the
+        // install runs (it has its own progress UI and failure path), and only
+        // a hard ceiling bounds the whole wait.
+        const pendingConnection = getWindowBackend(true)
+
+        connectionWait = pendingConnection
+
+        const conn = await withStallTimeout(pendingConnection, {
+          maxMs: BACKEND_BOOT_MAX_WAIT_MS,
+          message: 'Timed out connecting to Somnus backend',
+          stallMs: BACKEND_BOOT_WAIT_TIMEOUT_MS,
+          watch: watchBootActivity
+        })
 
         if (cancelled) {
           return
@@ -1429,6 +1510,29 @@ export function useGatewayBoot({
           failDesktopBoot(message)
           notifyError(err, translateNow('boot.errors.desktopBootFailed'))
           setSessionsLoading(false)
+
+          // Our wait gave up, but main's connection attempt keeps running (a
+          // timeout does not cancel it). If it still lands, the backend is
+          // up after all: recover in place instead of leaving the overlay
+          // until the user presses Retry. A genuinely dead backend never
+          // resolves this, so its recovery overlay stays.
+          if (stage === 'resolving' && isTimeoutError(err) && connectionWait) {
+            const straggler = connectionWait
+
+            straggler.then(
+              () => {
+                if (cancelled || bootCompleted || !bootFailed || connectionWait !== straggler) {
+                  return
+                }
+
+                bootFailed = false
+                bootRetryAttempt = 0
+                resumeDesktopBootForRetry(translateNow('boot.steps.startingDesktopConnection'))
+                void boot()
+              },
+              () => undefined
+            )
+          }
         }
       }
     }

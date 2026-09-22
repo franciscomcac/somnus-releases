@@ -1708,6 +1708,98 @@ describe('useGatewayBoot remote reconnect loop (real hook, fake socket)', () => 
     expect($desktopBoot.get().error).toBeTruthy()
   })
 
+  it('first-run install: a boot wait that outlasts the 45s budget while main installs never shows the failure overlay', async () => {
+    // Packaged first launch: main's getConnection() runs the whole install
+    // (clone, Python, venv, dependencies) before it spawns the backend. The
+    // renderer's boot wait must not time out underneath that.
+    let resolveConn: (conn: typeof primaryConn) => void = () => undefined
+    let bootstrapHandler: ((ev: Record<string, unknown>) => void) | null = null
+    const desktop = fakeDesktop()
+    desktop.getConnection = vi.fn(
+      () =>
+        new Promise(resolve => {
+          resolveConn = resolve
+        })
+    )
+    Object.assign(desktop, {
+      getBootstrapState: vi.fn(async () => ({ active: false, setupChoice: null })),
+      onBootstrapEvent: vi.fn((callback: (ev: Record<string, unknown>) => void) => {
+        bootstrapHandler = callback
+
+        return () => {
+          bootstrapHandler = null
+        }
+      })
+    })
+    ;(window as { hermesDesktop?: unknown }).hermesDesktop = desktop
+
+    render(<Harness />)
+    await flushAsync()
+
+    act(() => {
+      bootstrapHandler?.({ type: 'manifest', stages: [], protocolVersion: null })
+    })
+
+    // Four quiet minutes of installing: no failure.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4 * 60_000)
+    })
+    expect($desktopBoot.get().error).toBeNull()
+
+    // Install completes; main then spawns the backend and keeps reporting.
+    act(() => {
+      bootstrapHandler?.({ type: 'complete', marker: {} })
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000)
+    })
+    act(() => {
+      desktop.emitBootProgress({ error: null, message: 'spawn', phase: 'backend.spawn', progress: 84, running: true })
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000)
+    })
+    expect($desktopBoot.get().error).toBeNull()
+
+    await act(async () => {
+      resolveConn(primaryConn)
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await flushAsync()
+
+    expect($desktopBoot.get().error).toBeNull()
+    expect($gatewayState.get()).toBe('open')
+  })
+
+  it('a boot that timed out recovers on its own once main\'s connection attempt lands late', async () => {
+    let resolveConn: (conn: typeof primaryConn) => void = () => undefined
+    const desktop = fakeDesktop()
+
+    const late = new Promise<typeof primaryConn>(resolve => {
+      resolveConn = resolve
+    })
+
+    desktop.getConnection = vi.fn(() => late)
+    ;(window as { hermesDesktop?: unknown }).hermesDesktop = desktop
+
+    render(<Harness />)
+    await flushAsync()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(45_000)
+    })
+    expect($desktopBoot.get().error).toBeTruthy()
+
+    await act(async () => {
+      resolveConn(primaryConn)
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await flushAsync()
+
+    expect($desktopBoot.get().error).toBeNull()
+    expect($gatewayState.get()).toBe('open')
+  })
+
   it('softSwitch(): a getConnection() that hangs on a connection-apply switch does not latch $gatewaySwitching forever (#93454)', async () => {
     // Repro: main applies a new connection (onConnectionApplied), softSwitch()
     // re-dials via getConnection(), and the IPC round-trip wedges. Without an

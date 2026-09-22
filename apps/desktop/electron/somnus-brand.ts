@@ -14,7 +14,9 @@ export const SOMNUS = {
   releasesRepo: 'franciscomcac/somnus-releases',
   releasesBranch: 'main',
   // The Somnus gateway every request goes through.
-  gatewayUrl: 'https://gateway-production-c837.up.railway.app/v1'
+  gatewayUrl: 'https://gateway-production-c837.up.railway.app/v1',
+  // Somnus accounts website: sign-up, billing, and the app sign-in handoff.
+  accountsUrl: 'https://accounts-production-3073.up.railway.app'
 } as const
 
 export const SOMNUS_RELEASES_GIT_URL = `https://github.com/${SOMNUS.releasesRepo}.git`

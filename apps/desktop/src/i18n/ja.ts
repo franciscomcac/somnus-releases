@@ -5,7 +5,7 @@ import { defineLocale } from './define-locale'
 export const ja = defineLocale({
   sessionImport: {
     title: '別のアプリから続ける',
-    subtitle: '会話をHermesに取り込み、続きを始めましょう。',
+    subtitle: '会話をSomnusに取り込み、続きを始めましょう。',
     action: 'セッションを取り込む',
     readingFrom: '読み込み元',
     connectedComputer: '接続先のコンピューター',
@@ -32,8 +32,8 @@ export const ja = defineLocale({
     snapshot: 'この会話は取り込み済みです。既存のコピーを開いて続けられます。',
     copyNotice: '会話のテキストをコピーします。元のファイルは変更されません。ツール出力と推論は含まれません。',
     importing: '取り込み中…',
-    open: 'Hermesで開く',
-    continue: 'Hermesで続ける',
+    open: 'Somnusで開く',
+    continue: 'Somnusで続ける',
     importError: '会話を取り込めませんでした。'
   },
   common: {
@@ -615,7 +615,7 @@ export const ja = defineLocale({
       introSplashDesc: '空のチャットに表示されるワードマークとプロンプト。',
       reactionsTitle: 'メッセージリアクション',
       reactionsDesc:
-        'iMessage風の絵文字タップバック — メッセージにリアクションでき、Hermesもあなたのメッセージにリアクションします。',
+        'iMessage風の絵文字タップバック — メッセージにリアクションでき、Somnusもあなたのメッセージにリアクションします。',
       tipsTitle: 'アプリ内ヒント',
       tipsDesc:
         'アプリや Somnus からのヒントをときどき表示します。各ヒントは一度だけ表示されます。利用開始から30日後に自動でオフになりますが、再びオンにできます。',
@@ -2924,10 +2924,15 @@ export const ja = defineLocale({
 
   onboarding: {
     headerTitle: 'Somnus のセットアップをしましょう',
-    headerDesc: 'Somnus キーを貼り付けてチャットを始めましょう。',
+    headerDesc: 'Somnus アカウントでサインインしてチャットを始めましょう。',
     somnusKeyTitle: 'Somnus キーを貼り付け',
     somnusKeyDesc: 'キーで Somnus をすべてのモデルに接続します。キーは Somnus アカウントで確認できます。',
     somnusKeyInvalid: 'このキーは使えませんでした。確認してもう一度お試しください。',
+    somnusSignIn: 'Somnus でサインイン',
+    somnusSignInDesc: 'ブラウザでサインインするか、無料アカウントを作成してください。Somnus は自動的に接続されます。',
+    somnusSignInWaiting: 'ブラウザを待っています…',
+    somnusUseKey: 'キーを使う',
+    somnusSignInFailed: 'サインインが完了しませんでした。もう一度お試しください。',
     preparingInstall: 'Somnus はインストールを完了中です。初回実行では通常 1 分以内に完了します。',
     starting: 'Somnus を起動中…',
     lookingUpProviders: 'プロバイダーを検索中...',

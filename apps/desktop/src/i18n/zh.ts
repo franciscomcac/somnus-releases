@@ -3597,10 +3597,15 @@ export const zh = defineLocale({
 
   onboarding: {
     headerTitle: '开始设置 Somnus',
-    headerDesc: '粘贴你的 Somnus 密钥即可开始对话。',
+    headerDesc: '使用你的 Somnus 账户登录即可开始对话。',
     somnusKeyTitle: '粘贴你的 Somnus 密钥',
     somnusKeyDesc: '密钥会将 Somnus 连接到所有模型。你可以在 Somnus 账户中找到它。',
     somnusKeyInvalid: '这个密钥无效。请检查后重试。',
+    somnusSignIn: '使用 Somnus 登录',
+    somnusSignInDesc: '在浏览器中登录或创建免费账户，Somnus 会自动连接。',
+    somnusSignInWaiting: '正在等待浏览器…',
+    somnusUseKey: '改用密钥',
+    somnusSignInFailed: '登录未完成，请重试。',
     preparingInstall: 'Somnus 正在完成安装。首次运行通常不到一分钟。',
     starting: '正在启动 Somnus…',
     lookingUpProviders: '正在查找提供方...',

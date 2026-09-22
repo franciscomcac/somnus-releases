@@ -32,6 +32,7 @@
     "postbuild": "node scripts/assert-dist-built.mjs",
     "prebuilder": "node scripts/patch-electron-builder-mac-binary.mjs",
     "builder": "cross-env NODE_OPTIONS=--max-old-space-size=16384 node scripts/run-electron-builder.mjs",
+    "signing:check": "node scripts/run-electron-builder.mjs --signing-dry-run",
     "pack": "npm run build && npm run builder -- --dir --publish never",
     "dist": "npm run build && npm run builder",
     "dist:mac": "npm run build && npm run builder -- --mac",
@@ -195,6 +196,9 @@
     "electronVersion": "40.10.2",
     "appId": "com.somnus.desktop",
     "productName": "Somnus",
+    "extraMetadata": {
+      "name": "somnus"
+    },
     "executableName": "Somnus",
     "protocols": [
       {

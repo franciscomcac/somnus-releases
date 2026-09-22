@@ -598,23 +598,74 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
   const { t } = useI18n()
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const [waiting, setWaiting] = useState(false)
+  const [showKeyForm, setShowKeyForm] = useState(false)
   const [error, setError] = useState<null | string>(null)
   const canSave = value.trim().length > 0
+  const canSignIn = typeof window.hermesDesktop?.somnusSignIn === 'function'
 
-  const submit = async () => {
-    if (!canSave || saving) {
-      return
-    }
-
+  const connectKey = async (key: string) => {
     setSaving(true)
     setError(null)
-    const result = await saveSomnusKey(value, ctx)
+    const result = await saveSomnusKey(key, ctx)
 
     if (!result.ok) {
       setError(t.onboarding.somnusKeyInvalid)
     }
 
     setSaving(false)
+  }
+
+  const signIn = async () => {
+    if (waiting || saving || !window.hermesDesktop?.somnusSignIn) {
+      return
+    }
+
+    setError(null)
+    setWaiting(true)
+    const result = await window.hermesDesktop.somnusSignIn()
+    setWaiting(false)
+
+    if (result.ok) {
+      await connectKey(result.key)
+    } else if (!result.cancelled) {
+      setError(result.message || t.onboarding.somnusSignInFailed)
+    }
+  }
+
+  const cancel = () => void window.hermesDesktop?.somnusCancelSignIn?.()
+
+  const submit = () => {
+    if (canSave && !saving) {
+      void connectKey(value)
+    }
+  }
+
+  if (canSignIn && !showKeyForm) {
+    return (
+      <div className="grid gap-3">
+        <p className="text-xs leading-5 text-muted-foreground">{t.onboarding.somnusSignInDesc}</p>
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        <div className="flex items-center justify-between gap-3">
+          <Button className="font-medium" onClick={() => setShowKeyForm(true)} size="xs" type="button" variant="text">
+            {t.onboarding.somnusUseKey}
+          </Button>
+          {waiting ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{t.onboarding.somnusSignInWaiting}</span>
+              <Button onClick={cancel} size="sm" variant="ghost">
+                {t.common.cancel}
+              </Button>
+            </div>
+          ) : (
+            <Button disabled={saving} onClick={() => void signIn()}>
+              {saving ? <Loader2 className="animate-spin" /> : <KeyRound />}
+              {saving ? t.onboarding.connecting : t.onboarding.somnusSignIn}
+            </Button>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -628,14 +679,22 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
         autoFocus
         className="font-mono"
         onChange={e => setValue(e.target.value)}
-        onKeyDown={e => isSubmitEnter(e) && void submit()}
+        onKeyDown={e => isSubmitEnter(e) && submit()}
         placeholder="sk-..."
         type="password"
         value={value}
       />
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      <div className="flex justify-end">
-        <Button disabled={!canSave || saving} onClick={() => void submit()}>
+      <div className="flex items-center justify-between gap-3">
+        {canSignIn ? (
+          <Button className="font-medium" onClick={() => setShowKeyForm(false)} size="xs" type="button" variant="text">
+            <ChevronLeft className="size-3" />
+            {t.onboarding.somnusSignIn}
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button disabled={!canSave || saving} onClick={submit}>
           {saving ? <Loader2 className="animate-spin" /> : <KeyRound />}
           {saving ? t.onboarding.connecting : t.common.connect}
         </Button>

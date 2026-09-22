@@ -48,7 +48,8 @@ export const PROVIDER_GROUPS: ProviderPrefix[] = [
   {
     prefix: 'NOUS_',
     name: 'Nous Portal',
-    description: 'Hosted Somnus & Nous-trained models',
+    // Somnus: "Hermes" here is Nous' Hermes model family, not the product name.
+    description: 'Hosted Hermes & Nous-trained models',
     docsUrl: 'https://portal.nousresearch.com',
     priority: 0
   },
