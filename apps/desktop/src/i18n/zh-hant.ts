@@ -263,7 +263,7 @@ export const zhHant = defineLocale({
     doneDescription: '偵錯套件已私密上傳。在您的支援討論串中分享以下連結，團隊即可檢視您的日誌。',
     failedTitle: '上傳失敗',
     failedHint:
-      '您也可以在終端機執行 `hermes debug share --nous`，或執行 `hermes debug share --local` 在不上傳的情況下檢視報告。',
+      '您也可以在終端機執行 `somnus debug share --nous`，或執行 `somnus debug share --local` 在不上傳的情況下檢視報告。',
     handoffLead: '在以下位置繼續討論:',
     links: {
       github: 'GitHub Issues',
@@ -1109,7 +1109,7 @@ export const zhHant = defineLocale({
       remoteDesc:
         '將此桌面殼層連線至遠端 Somnus 後端。託管閘道使用 OAuth 或帳號密碼；自託管閘道也可使用工作階段 Token。',
       remoteUrlTitle: '遠端 URL',
-      remoteUrlDesc: '遠端儀表板後端的基礎 URL。支援路徑前綴，例如 /hermes。',
+      remoteUrlDesc: '遠端儀表板後端的基礎 URL。支援路徑前綴，例如 /somnus。',
       probing: '正在檢查此閘道的驗證方式…',
       probeError: '暫時無法連線此閘道。請檢查 URL；閘道回應後將顯示驗證方式。',
       signedIn: '已登入',
@@ -1181,7 +1181,7 @@ export const zhHant = defineLocale({
       sshKeyTitle: '金鑰檔案',
       sshKeyDesc: '私密金鑰路徑。留空 = ssh-agent 或 ~/.ssh/config。',
       sshHermesPathTitle: 'Somnus 路徑（選用）',
-      sshHermesPathDesc: '遠端 hermes 執行檔的完整路徑。留空 = 自動偵測。',
+      sshHermesPathDesc: '遠端 somnus 執行檔的完整路徑。留空 = 自動偵測。',
       sshHermesPathPlaceholder: '自動偵測',
       sshTestConnection: '測試 SSH',
       sshConnect: '連線',
@@ -1193,7 +1193,7 @@ export const zhHant = defineLocale({
         'SSH 驗證失敗。請將金鑰載入 ssh-agent（ssh-add），或在 ~/.ssh/config 中設定 IdentityFile——Somnus 以非互動方式執行 ssh。',
       sshErrHostKey: '自上次連線以來主機金鑰已變更。請確認這是預期的，然後執行 ssh-keygen -R <host> 並重新連線。',
       sshErrNotInstalled:
-        '遠端主機上未安裝 Somnus。請在遠端安裝（curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh）或設定 Somnus 路徑。',
+        '遠端主機上未安裝 Somnus。請在遠端安裝（curl -fsSL https://raw.githubusercontent.com/franciscomcac/somnus-releases/main/scripts/install.sh | sh）或設定 Somnus 路徑。',
       sshErrPlatform: '不支援的遠端平台。Somnus 的 SSH 模式支援 Linux、macOS 和 Windows 遠端主機。',
       sshErrTimeout: 'SSH 連線逾時。主機可能無法存取或處於睡眠狀態。',
       sshErrUpdateRequired: '使用 Desktop SSH 連線前，請更新遠端主機上的 Somnus。',
@@ -1591,7 +1591,7 @@ export const zhHant = defineLocale({
     edit: '編輯',
     archive: '封存',
     skillArchivedTitle: '技能已封存',
-    skillArchivedMessage: '可透過 hermes curator restore 還原。',
+    skillArchivedMessage: '可透過 somnus curator restore 還原。',
     officialCatalog: '可安裝',
     officialPill: '官方'
   },
@@ -1979,7 +1979,7 @@ export const zhHant = defineLocale({
       title: (profile: string) => `將 ${profile} 連線至遠端主機`,
       description: '此設定檔中的工作階段將在你指定的遠端 Somnus 上執行，而不是這台電腦。',
       urlLabel: '遠端位址',
-      urlPlaceholder: 'https://hermes.example.com',
+      urlPlaceholder: 'https://somnus.example.com',
       urlInvalid: '請輸入以 http:// 或 https:// 開頭的完整位址',
       tokenLabel: '存取權杖',
       tokenPlaceholder: '貼上遠端工作階段權杖',
@@ -2507,7 +2507,7 @@ export const zhHant = defineLocale({
       '/resume': '繼續之前的工作階段',
       '/details': '控制對話記錄的詳細程度',
       '/copy': '複製所選內容或最後一條助手訊息',
-      '/quit': '結束 hermes'
+      '/quit': '結束 Somnus'
     },
     hotkeyDescs: {
       'composer.mention': '參照檔案、資料夾、URL、git',
@@ -2850,7 +2850,7 @@ export const zhHant = defineLocale({
     remoteSetupDesc: '輸入閘道 URL。Somnus 會偵測需要權杖還是瀏覽器登入。',
     remoteUrlTitle: '閘道 URL',
     remoteUrlDesc: '使用 Somnus 閘道的基礎 URL；遠端位址請包含 https://。',
-    remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
+    remoteUrlPlaceholder: 'https://gateway.example.com/somnus',
     probing: '正在偵測閘道驗證方式...',
     probeError: '無法連線到該 Somnus 閘道。',
     identityProvider: '您的身分提供者',
@@ -3437,7 +3437,7 @@ export const zhHant = defineLocale({
       reject: '拒絕',
       alwaysTitle: '一律允許此指令？',
       alwaysDescription: pattern =>
-        `這會將「${pattern}」模式加入永久允許清單（~/.hermes/config.yaml）。Somnus 對類似指令將不再詢問，包括目前工作階段和未來工作階段。`,
+        `這會將「${pattern}」模式加入永久允許清單（Somnus config.yaml）。Somnus 對類似指令將不再詢問，包括目前工作階段和未來工作階段。`,
       alwaysAllow: '一律允許'
     },
     clarify: {
@@ -3673,7 +3673,7 @@ export const zhHant = defineLocale({
       success: platform => `已移交到 ${platform}。隨時可在此處恢復。`,
       systemNote: platform => `↻ 已移交到 ${platform} — 隨時可在此處恢復。`,
       failed: error => `移交失敗：${error}`,
-      timedOut: '等待閘道逾時。`hermes gateway` 是否正在執行？'
+      timedOut: '等待閘道逾時。`somnus gateway` 是否正在執行？'
     }
   },
 

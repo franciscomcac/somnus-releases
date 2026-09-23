@@ -16,6 +16,10 @@ DEFAULT_SOUL_MD = (
     "the stakes demand it, not by default."
 )
 
+_UPSTREAM_INSTALLER_SOUL = (
+    'You are Hermes Agent, built by Nous Research. Be direct: match the length of your reply to the weight of the ask — a one-line question gets a one-line answer, and finished work gets a short report of what changed, what\'s verified, and what\'s left, never a replay of the process. No filler ("Great question," "I\'d be happy to"), no restating the request back, no re-summarizing what you already said, no narrating tool calls the user can see. Plain claims over adjectives; when unsure, say so plainly. Agree because it\'s right, not because the user said it. Depth is earned — give it when the user asks for detail, teaches, or the stakes demand it, not by default.'
+)
+
 _SCAFFOLD_HEAD = (
     "# Hermes Agent Persona\n\n<!--\nThis file defines the agent's personality and tone.\n"
     "The agent will embody whatever you write here.\nEdit this to customize how Hermes communicates with you.\n\n"
@@ -39,6 +43,10 @@ _LEGACY_TEMPLATE_SOULS = (
     ) + _SCAFFOLD_TAIL,
     # Bare scaffold without the "Examples" block, shipped briefly.
     _SCAFFOLD_HEAD + _SCAFFOLD_TAIL,
+    # Somnus: the upstream installers seeded this persona text before the rebrand. Existing installs converge on
+    # the Somnus DEFAULT_SOUL_MD (em-dash from install.sh, ASCII dashes from install.ps1).
+    _UPSTREAM_INSTALLER_SOUL,
+    _UPSTREAM_INSTALLER_SOUL.replace("\u2014", "--"),
     # The previous generation of DEFAULT_SOUL_MD (same auto-seed mechanism, older string).
     (
         "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, "

@@ -301,7 +301,7 @@ export const zh = defineLocale({
     doneDescription: '调试包已私密上传。在您的支持会话中分享以下链接，团队即可查看您的日志。',
     failedTitle: '上传失败',
     failedHint:
-      '您也可以在终端运行 `hermes debug share --nous`，或运行 `hermes debug share --local` 在不上传的情况下查看报告。',
+      '您也可以在终端运行 `somnus debug share --nous`，或运行 `somnus debug share --local` 在不上传的情况下查看报告。',
     handoffLead: '在以下位置继续讨论:',
     links: {
       github: 'GitHub Issues',
@@ -1444,7 +1444,7 @@ export const zh = defineLocale({
       cloudAgentProvisioning: '正在配置…',
       cloudStatusLabel: status => `状态：${status}`,
       remoteUrlTitle: '远程 URL',
-      remoteUrlDesc: '远程 dashboard 后端的基础 URL。支持路径前缀，例如 /hermes。',
+      remoteUrlDesc: '远程 dashboard 后端的基础 URL。支持路径前缀，例如 /somnus。',
       probing: '正在检查此网关的认证方式…',
       probeError: '暂时无法访问此网关。请检查 URL；网关响应后会显示认证方式。',
       signedIn: '已登录',
@@ -1516,7 +1516,7 @@ export const zh = defineLocale({
       sshKeyTitle: '密钥文件',
       sshKeyDesc: '私钥路径。留空 = ssh-agent 或 ~/.ssh/config。',
       sshHermesPathTitle: 'Somnus 路径（可选）',
-      sshHermesPathDesc: '远程 hermes 可执行文件的完整路径。留空 = 自动检测。',
+      sshHermesPathDesc: '远程 somnus 可执行文件的完整路径。留空 = 自动检测。',
       sshHermesPathPlaceholder: '自动检测',
       sshTestConnection: '测试 SSH',
       sshConnect: '连接',
@@ -1528,7 +1528,7 @@ export const zh = defineLocale({
         'SSH 认证失败。请将密钥加载到 ssh-agent（ssh-add），或在 ~/.ssh/config 中设置 IdentityFile——Somnus 以非交互方式运行 ssh。',
       sshErrHostKey: '自上次连接以来主机密钥已更改。请确认这是预期的，然后运行 ssh-keygen -R <host> 并重新连接。',
       sshErrNotInstalled:
-        '远程主机上未安装 Somnus。请在远程安装（curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh）或设置 Somnus 路径。',
+        '远程主机上未安装 Somnus。请在远程安装（curl -fsSL https://raw.githubusercontent.com/franciscomcac/somnus-releases/main/scripts/install.sh | sh）或设置 Somnus 路径。',
       sshErrPlatform: '不支持的远程平台。Somnus 的 SSH 模式支持 Linux、macOS 和 Windows 远程主机。',
       sshErrTimeout: 'SSH 连接超时。主机可能无法访问或处于休眠状态。',
       sshErrUpdateRequired: '使用 Desktop SSH 连接前，请更新远程主机上的 Somnus。',
@@ -1960,7 +1960,7 @@ export const zh = defineLocale({
     edit: '编辑',
     archive: '归档',
     skillArchivedTitle: '技能已归档',
-    skillArchivedMessage: '可通过 hermes curator restore 恢复。',
+    skillArchivedMessage: '可通过 somnus curator restore 恢复。',
     tabPlugins: '插件',
     plugins: {
       agentTitle: 'Agent 插件',
@@ -2515,7 +2515,7 @@ export const zh = defineLocale({
       wecom: '在企业微信中添加群机器人，复制其 webhook key 作为 WECOM_BOT_ID。仅可发送——双向请用企业微信 (应用) 选项。',
       wecom_callback: '设置一个企业微信自建应用，暴露其回调 URL，并提供 corp ID、secret、agent ID 和 AES key。',
       weixin:
-        '运行 `hermes gateway setup`，选择 Weixin，然后使用个人微信账号扫描并确认二维码。Somnus 会通过腾讯 iLink Bot API 连接并保存凭据。',
+        '运行 `somnus gateway setup`，选择 Weixin，然后使用个人微信账号扫描并确认二维码。Somnus 会通过腾讯 iLink Bot API 连接并保存凭据。',
       qqbot: '在 QQ 开放平台 (q.qq.com) 注册一个应用，复制 App ID 和 Client Secret。',
       api_server:
         '把 Somnus 暴露为兼容 OpenAI 的 API。设置一个鉴权密钥，然后把 Open WebUI / LobeChat 等指向 host:port。',
@@ -2624,7 +2624,7 @@ export const zh = defineLocale({
       title: (profile: string) => `将 ${profile} 连接到远程主机`,
       description: '此配置档案中的会话将在你指定的远程 Somnus 上运行，而不是这台电脑。',
       urlLabel: '远程地址',
-      urlPlaceholder: 'https://hermes.example.com',
+      urlPlaceholder: 'https://somnus.example.com',
       urlInvalid: '请输入以 http:// 或 https:// 开头的完整地址',
       tokenLabel: '访问令牌',
       tokenPlaceholder: '粘贴远程会话令牌',
@@ -3178,7 +3178,7 @@ export const zh = defineLocale({
       '/resume': '恢复之前的会话',
       '/details': '控制对话记录的详细程度',
       '/copy': '复制所选内容或最后一条助手消息',
-      '/quit': '退出 hermes'
+      '/quit': '退出 Somnus'
     },
     hotkeyDescs: {
       'composer.mention': '引用文件、文件夹、URL、git',
@@ -3557,7 +3557,7 @@ export const zh = defineLocale({
     remoteSetupDesc: '输入网关 URL。Somnus 会检测需要令牌还是浏览器登录。',
     remoteUrlTitle: '网关 URL',
     remoteUrlDesc: '使用 Somnus 网关的基础 URL；远程地址请包含 https://。',
-    remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
+    remoteUrlPlaceholder: 'https://gateway.example.com/somnus',
     probing: '正在检测网关认证方式...',
     probeError: '无法连接到该 Somnus 网关。',
     identityProvider: '你的身份提供方',
@@ -4227,7 +4227,7 @@ export const zh = defineLocale({
       reject: '拒绝',
       alwaysTitle: '始终允许此命令？',
       alwaysDescription: pattern =>
-        `这会将“${pattern}”模式加入永久允许列表 (~/.hermes/config.yaml)。Somnus 对类似命令将不再询问，包括当前会话和未来会话。`,
+        `这会将“${pattern}”模式加入永久允许列表 (Somnus config.yaml)。Somnus 对类似命令将不再询问，包括当前会话和未来会话。`,
       alwaysAllow: '始终允许'
     },
     clarify: {
@@ -4476,7 +4476,7 @@ export const zh = defineLocale({
       success: platform => `已移交到 ${platform}。随时可在此处恢复。`,
       systemNote: platform => `↻ 已移交到 ${platform} — 随时可在此处恢复。`,
       failed: error => `移交失败：${error}`,
-      timedOut: '等待网关超时。`hermes gateway` 是否正在运行？'
+      timedOut: '等待网关超时。`somnus gateway` 是否正在运行？'
     }
   },
 

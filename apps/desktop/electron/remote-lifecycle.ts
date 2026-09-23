@@ -199,7 +199,7 @@ async function locateHermes(ssh, remoteHermesPath) {
 
     const err: any = new Error(
       `The Somnus path you set is not an executable on the remote host: "${remoteHermesPath}". ` +
-        'Check the path (it must be the full path to the `hermes` binary on the remote, e.g. ' +
+        'Check the path (it must be the full path to the `somnus` binary on the remote, e.g. ' +
         '~/hermes-agent/.venv/bin/hermes), or clear it to auto-detect.'
     )
 
@@ -236,8 +236,8 @@ async function locateHermes(ssh, remoteHermesPath) {
   }
 
   const err: any = new Error(
-    'Somnus is not installed on the remote host (could not find a `hermes` executable). ' +
-      'Install it on the remote with:  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh  ' +
+    'Somnus is not installed on the remote host (could not find a `somnus` executable). ' +
+      'Install it on the remote with:  curl -fsSL https://raw.githubusercontent.com/franciscomcac/somnus-releases/main/scripts/install.sh | sh  ' +
       '— or set the Somnus path explicitly in the SSH connection settings.'
   )
 

@@ -68,3 +68,4 @@ configure({ asyncUtilTimeout: 12_000 })
 // Somnus filters every model list down to the Somnus gateway; upstream suites
 // test the generic multi-provider picker, so they opt out (see lib/somnus.ts).
 ;(globalThis as { __SOMNUS_ALLOW_ALL_PROVIDERS__?: boolean }).__SOMNUS_ALLOW_ALL_PROVIDERS__ = true
+;(globalThis as { __SOMNUS_UPSTREAM_TEST_MODE__?: boolean }).__SOMNUS_UPSTREAM_TEST_MODE__ = true

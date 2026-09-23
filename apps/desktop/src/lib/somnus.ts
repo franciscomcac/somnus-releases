@@ -96,3 +96,10 @@ export function somnusModelVendor(modelId: string): SomnusVendor {
 
   return hit ? { key: hit.key, label: hit.label, order: hit.order } : OTHER_VENDOR
 }
+
+// The bundled wake-word model only knows the upstream engine's name; Somnus
+// hides the hands-free wake word until a "hey Somnus" model ships.
+// (Upstream UI tests still exercise it; vitest.setup.ts sets the test-mode flag.)
+export const SOMNUS_WAKE_WORD_ENABLED = Boolean(
+  (globalThis as { __SOMNUS_UPSTREAM_TEST_MODE__?: boolean }).__SOMNUS_UPSTREAM_TEST_MODE__
+)

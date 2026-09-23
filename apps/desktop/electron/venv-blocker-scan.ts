@@ -335,6 +335,6 @@ export function formatProbeFailedMessage(error?: string): string {
     timeoutDetail +
     '\n\n' +
     'Close other Somnus windows and terminals, then retry.  If the problem\n' +
-    'persists, run `hermes update` in a terminal for detailed diagnostics.'
+    'persists, run `somnus update` in a terminal for detailed diagnostics.'
   )
 }

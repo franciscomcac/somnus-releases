@@ -6,6 +6,7 @@ import { Tip, TipKeybindLabel } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { Ear, EarOff, iconSize, Layers3, Loader2, Square } from '@/lib/icons'
+import { SOMNUS_WAKE_WORD_ENABLED } from '@/lib/somnus'
 import { cn } from '@/lib/utils'
 import { $hudMode, closeHud, resetHudLayout } from '@/store/hud'
 import { $wakeWord, toggleWakeWord } from '@/store/wake-word'
@@ -241,7 +242,7 @@ function ConversationPill({
     <div className="ml-auto flex shrink-0 items-center gap-(--composer-control-gap)">
       {/* Keep the ear visible during voice chat — shown paused, since the
           conversation holds the mic (the one time wake must not listen). */}
-      <WakeWordButton disabled={disabled} pausedForVoice />
+      {SOMNUS_WAKE_WORD_ENABLED && <WakeWordButton disabled={disabled} pausedForVoice />}
       <Tip label={muted ? c.unmuteMic : c.muteMic} placement="control">
         <Button
           aria-label={muted ? c.unmuteMic : c.muteMic}
@@ -336,7 +337,7 @@ function WakeWordButton({ disabled, pausedForVoice = false }: { disabled: boolea
   const c = t.composer
   const wake = useStore($wakeWord)
 
-  const phrase = wake.phrase || 'hey hermes'
+  const phrase = wake.phrase || 'hey somnus'
 
   const label = pausedForVoice
     ? c.wakeWordPausedVoice(phrase)

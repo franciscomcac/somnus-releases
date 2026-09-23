@@ -170,7 +170,7 @@ export function PluginInstallModal() {
       ? m.agentTargetRemote(targetProfileLabel)
       : m.agentTargetLocal(
           targetProfileLabel,
-          targetProfile === 'default' ? '~/.hermes/plugins/' : `~/.hermes/profiles/${targetProfile}/plugins/`
+          targetProfile === 'default' ? 'Somnus plugins folder' : `Somnus profile ${targetProfile} plugins folder`
         )
 
   // A unified package installed into a local backend carries its own desktop

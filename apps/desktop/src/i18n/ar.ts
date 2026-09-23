@@ -48,7 +48,7 @@ export const ar = defineLocale({
     doneDescription: 'تم رفع الحزمة بشكل خاص. شارك الرابط أدناه في محادثة الدعم لكي يتمكن الفريق من رؤية سجلاتك.',
     failedTitle: 'فشل الرفع',
     failedHint:
-      'يمكنك أيضاً تشغيل `hermes debug share --nous` من الطرفية، أو `hermes debug share --local` لعرض التقرير دون رفعه.',
+      'يمكنك أيضاً تشغيل `somnus debug share --nous` من الطرفية، أو `somnus debug share --local` لعرض التقرير دون رفعه.',
     handoffLead: 'تابع النقاش في:',
     links: {
       github: 'GitHub Issues',
@@ -992,7 +992,7 @@ export const ar = defineLocale({
       remoteDesc:
         'صل واجهة سطح المكتب هذه بخلفية Somnus بعيدة. البوابات المستضافة تستخدم OAuth أو اسم مستخدم وكلمة مرور، والبوابات الذاتية قد تستخدم رمز جلسة.',
       remoteUrlTitle: 'رابط البوابة البعيدة',
-      remoteUrlDesc: 'الرابط الأساسي لخلفية لوحة التحكم البعيدة. يمكن استخدام بادئات مسار مثل /hermes.',
+      remoteUrlDesc: 'الرابط الأساسي لخلفية لوحة التحكم البعيدة. يمكن استخدام بادئات مسار مثل /somnus.',
       probing: 'جار فحص طريقة مصادقة هذه البوابة...',
       probeError: 'تعذر الوصول إلى هذه البوابة الآن. تحقق من الرابط وستظهر طريقة المصادقة عند الاستجابة.',
       signedIn: 'تم تسجيل الدخول',
@@ -1703,7 +1703,7 @@ export const ar = defineLocale({
       title: (profile: string) => `ربط ${profile} بمضيف بعيد`,
       description: 'ستعمل جلسات هذا الملف الشخصي على خادم Somnus البعيد الذي تحدده، بدلاً من هذا الجهاز.',
       urlLabel: 'العنوان البعيد',
-      urlPlaceholder: 'https://hermes.example.com',
+      urlPlaceholder: 'https://somnus.example.com',
       urlInvalid: 'أدخل عنواناً كاملاً يبدأ بـ http:// أو https://',
       tokenLabel: 'رمز الوصول',
       tokenPlaceholder: 'الصق رمز الجلسة البعيد',
@@ -2174,7 +2174,7 @@ export const ar = defineLocale({
       '/resume': 'استئناف جلسة سابقة',
       '/details': 'التحكم في مستوى تفاصيل النص',
       '/copy': 'نسخ التحديد أو آخر رسالة من المساعد',
-      '/quit': 'الخروج من hermes'
+      '/quit': 'الخروج من Somnus'
     },
     hotkeyDescs: {
       'composer.mention': 'الإشارة إلى الملفات والمجلدات والروابط وgit',
@@ -3343,7 +3343,7 @@ export const ar = defineLocale({
       success: platform => `تم التسليم إلى ${platform}. استأنف هنا في أي وقت.`,
       systemNote: platform => `↻ تم التسليم إلى ${platform} — استأنف هنا في أي وقت.`,
       failed: error => `فشل التسليم: ${error}`,
-      timedOut: 'انتهت المهلة في انتظار البوابة. هل `hermes gateway` قيد التشغيل؟'
+      timedOut: 'انتهت المهلة في انتظار البوابة. هل `somnus gateway` قيد التشغيل؟'
     }
   },
   errors: {

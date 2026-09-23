@@ -6,6 +6,7 @@ import { FanMenu, type FanMenuItem } from '@/components/ui/fan-menu'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { Ear, EarOff, iconSize, Loader2, Square, Volume2, VolumeX } from '@/lib/icons'
+import { SOMNUS_WAKE_WORD_ENABLED } from '@/lib/somnus'
 import { cn } from '@/lib/utils'
 import { $wakeWord, toggleWakeWord } from '@/store/wake-word'
 
@@ -37,7 +38,7 @@ export function VoiceFan({ autoSpeak, disabled, state, voiceStatus, onDictate, o
   const c = t.composer
   const wake = useStore($wakeWord)
 
-  const phrase = wake.phrase || 'hey hermes'
+  const phrase = wake.phrase || 'hey somnus'
   const dictating = state.voice.active || voiceStatus !== 'idle'
   const wakeListening = wake.listening
   const wakePending = wake.pending
@@ -91,7 +92,7 @@ export function VoiceFan({ autoSpeak, disabled, state, voiceStatus, onDictate, o
           onToggleAutoSpeak()
         }
       },
-      {
+      ...(SOMNUS_WAKE_WORD_ENABLED ? [{
         id: 'wake',
         active: wakeListening,
         disabled: disabled || wakePending,
@@ -101,7 +102,7 @@ export function VoiceFan({ autoSpeak, disabled, state, voiceStatus, onDictate, o
           triggerHaptic(wakeListening ? 'close' : 'open')
           void toggleWakeWord()
         }
-      }
+      }] : [])
     ],
     [autoSpeak, c, disabled, onToggleAutoSpeak, phrase, wakeListening, wakePending]
   )
