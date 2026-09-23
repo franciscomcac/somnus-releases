@@ -29,16 +29,10 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   // Launch-flag fact: skip the first-run film (HERMES_SKIP_INTRO=1 or
   // --skip-intro). Rehearsal aid for the guided chat behind it.
   skipIntro: launchFlags?.skipIntro === true,
-  // Somnus: browser sign-in (device pairing); resolves with the customer's gateway key.
+  // Somnus: browser sign-in (loopback + PKCE); resolves with the customer's gateway key.
   somnusSignIn: () => ipcRenderer.invoke('somnus:sign-in:start'),
   somnusCancelSignIn: () => ipcRenderer.invoke('somnus:sign-in:cancel'),
   somnusReopenSignIn: () => ipcRenderer.invoke('somnus:sign-in:reopen'),
-  onSomnusSignInCode: callback => {
-    const listener = (_event, payload) => callback(payload)
-    ipcRenderer.on('somnus:sign-in-code', listener)
-
-    return () => ipcRenderer.removeListener('somnus:sign-in-code', listener)
-  },
   // Somnus: background auto-update (installed Windows builds).
   somnusUpdateState: () => ipcRenderer.invoke('somnus:update:get'),
   somnusInstallUpdate: () => ipcRenderer.invoke('somnus:update:install'),

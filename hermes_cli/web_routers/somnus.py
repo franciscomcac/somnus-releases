@@ -46,7 +46,7 @@ async def somnus_account(profile: Optional[str] = None):
             "spend_30d_usd": (float(acct["spend_cents_30d"]) / 100 if "spend_cents_30d" in acct
                               else float(acct.get("spend") or 0)),
             "requests_30d": int(acct.get("requests_30d") or 0),
-            "top_up_url": acct.get("top_up_url") or f"{sa.SOMNUS_ACCOUNTS_URL}/dashboard#buy",
+            "top_up_url": acct.get("top_up_url") or f"{sa.SOMNUS_ACCOUNTS_URL}/billing",
             "dashboard_url": acct.get("dashboard_url") or f"{sa.SOMNUS_ACCOUNTS_URL}/dashboard",
         }
 

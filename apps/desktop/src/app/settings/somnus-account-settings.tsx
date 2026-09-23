@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useI18n } from '@/i18n'
 import { openExternalLink } from '@/lib/external-link'
 import { ExternalLink, KeyRound, Loader2, LogOut, Wallet } from '@/lib/icons'
-import { SOMNUS_ACCOUNTS_URL } from '@/lib/somnus'
+import { SOMNUS_ACCOUNTS_URL, SOMNUS_TOP_UP_URL } from '@/lib/somnus'
 import { notify } from '@/store/notifications'
 import { showSomnusSignedOut, startManualOnboarding } from '@/store/onboarding'
 import { $settingsRequestProfile } from '@/store/settings-scope'
@@ -57,7 +57,7 @@ export function SomnusAccountSettings({ onSignedOut }: { onSignedOut?: () => voi
   }
 
   const dashboardUrl = account?.dashboard_url || `${SOMNUS_ACCOUNTS_URL}/dashboard`
-  const topUpUrl = account?.top_up_url || `${SOMNUS_ACCOUNTS_URL}/dashboard#buy`
+  const topUpUrl = account?.top_up_url || SOMNUS_TOP_UP_URL
   const signedIn = account?.signed_in !== false
   const hasBalance = typeof account?.balance_usd === 'number'
 

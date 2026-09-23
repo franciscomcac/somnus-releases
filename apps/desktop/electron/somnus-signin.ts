@@ -1,18 +1,19 @@
 // Somnus: "Sign in with Somnus" for the desktop app.
 //
-// Device pairing (the same protocol somnus.world and the Somnus accounts
-// service both speak):
-//   1. POST <accounts>/api/public/device/start {label}
-//        -> {device_code, user_code, verification_url_complete, interval, expires_in}
-//   2. The app shows user_code and opens verification_url_complete in the
-//      browser; the customer signs in there (if needed) and clicks "Sign in".
-//   3. The app polls POST <accounts>/api/public/device/poll {device_code}
-//        202 pending | 200 {api_key, email, gateway_url?} | 403 denied | 404/410 gone
-// No deep link is involved, so it works even when the browser refuses to open
-// somnus:// links. Only one sign-in is in flight at a time; a new start()
-// supersedes the old one.
+// Browser sign-in for native apps (RFC 8252: loopback redirect + PKCE S256):
+//   1. The app listens on http://127.0.0.1:<random port>/callback and opens
+//      <site>/app/connect?redirect_uri&state&code_challenge&code_challenge_method=S256
+//   2. The customer signs in (or signs up) on the website; the site sends the
+//      browser straight back to the loopback URL with ?code&state. No codes to
+//      type or compare, no somnus:// link for the browser to block.
+//   3. The app answers the browser with a redirect to <site>/app/connected and
+//      POSTs {code, code_verifier, redirect_uri} to <site>/api/public/app/exchange,
+//      which returns the account's gateway key once.
+// Only one sign-in runs at a time; a new start() supersedes the old one.
 
-import os from 'node:os'
+import { createHash, randomBytes } from 'node:crypto'
+import http from 'node:http'
+import type { AddressInfo } from 'node:net'
 
 import { SOMNUS } from './somnus-brand'
 
@@ -20,23 +21,25 @@ export type SomnusSignInResult =
   | { ok: true; key: string; gatewayUrl: string; email: string }
   | { ok: false; message: string; cancelled?: boolean }
 
-export interface SomnusSignInCode {
-  userCode: string
-  url: string
-}
-
 interface Pending {
   id: number
   url: string
+  server: http.Server | null
   resolve: (result: SomnusSignInResult) => void
   timer: ReturnType<typeof setTimeout> | null
 }
 
-const REQUEST_TIMEOUT_MS = 15_000
-const MAX_POLL_INTERVAL_S = 10
+const SIGN_IN_TIMEOUT_MS = 15 * 60 * 1000
+const REQUEST_TIMEOUT_MS = 20_000
 
 let pending: null | Pending = null
 let nextId = 1
+
+const b64url = (buf: Buffer) => buf.toString('base64url')
+
+export function somnusAccountsUrl(): string {
+  return (process.env.SOMNUS_ACCOUNTS_URL || SOMNUS.accountsUrl).replace(/\/+$/, '')
+}
 
 function settle(result: SomnusSignInResult) {
   const current = pending
@@ -51,154 +54,118 @@ function settle(result: SomnusSignInResult) {
     clearTimeout(current.timer)
   }
 
+  // Let the browser's redirect response flush before the listener goes away.
+  const server = current.server
+  setTimeout(() => server?.close(), 2000).unref?.()
   current.resolve(result)
 }
 
-export function somnusAccountsUrl(): string {
-  return (process.env.SOMNUS_ACCOUNTS_URL || SOMNUS.accountsUrl).replace(/\/+$/, '')
-}
-
-async function postJson(path: string, body: unknown): Promise<{ status: number; json: Record<string, unknown> }> {
-  const res = await fetch(`${somnusAccountsUrl()}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Somnus-App' },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+function listen(server: http.Server): Promise<number> {
+  return new Promise((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => resolve((server.address() as AddressInfo).port))
   })
-
-  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>
-
-  return { status: res.status, json }
 }
 
-function deviceLabel(): string {
-  const host = os.hostname().replace(/\.local$/i, '').trim()
-  const kind = process.platform === 'win32' ? 'Windows' : process.platform === 'darwin' ? 'Mac' : 'Linux'
+async function exchange(code: string, verifier: string, redirectUri: string): Promise<SomnusSignInResult> {
+  try {
+    const res = await fetch(`${somnusAccountsUrl()}/api/public/app/exchange`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Somnus-App' },
+      body: JSON.stringify({ code, code_verifier: verifier, redirect_uri: redirectUri }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    })
 
-  return host ? `${host} (${kind})` : `${kind} computer`
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>
+
+    if (!res.ok || typeof body.api_key !== 'string' || !body.api_key) {
+      return { ok: false, message: String(body.message || 'Sign-in did not finish. Try again.') }
+    }
+
+    return {
+      ok: true,
+      key: body.api_key,
+      gatewayUrl: typeof body.gateway_url === 'string' && body.gateway_url ? body.gateway_url : SOMNUS.gatewayUrl,
+      email: typeof body.email === 'string' ? body.email : ''
+    }
+  } catch {
+    return { ok: false, message: 'Could not reach Somnus. Check your internet connection.' }
+  }
 }
 
-export function startSomnusSignIn(
-  openExternal: (url: string) => Promise<void> | void,
-  onCode: (code: SomnusSignInCode) => void
+export async function startSomnusSignIn(
+  openExternal: (url: string) => Promise<void> | void
 ): Promise<SomnusSignInResult> {
   settle({ ok: false, cancelled: true, message: 'Superseded by a new sign-in.' })
 
   const id = nextId++
+  const state = b64url(randomBytes(32))
+  const verifier = b64url(randomBytes(48))
+  const challenge = b64url(createHash('sha256').update(verifier).digest())
+  const site = somnusAccountsUrl()
+  let redirectUri = ''
+  let handled = false
+
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url || '/', 'http://127.0.0.1')
+
+    if (url.pathname !== '/callback') {
+      res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found')
+
+      return
+    }
+
+    const code = url.searchParams.get('code') || ''
+    const ok = !handled && pending?.id === id && Boolean(code) && url.searchParams.get('state') === state
+    // Send the browser to the website's own "you're signed in" page.
+    res
+      .writeHead(302, { Location: `${site}/app/connected${ok ? '' : '?error=1'}`, 'Cache-Control': 'no-store' })
+      .end()
+
+    if (!ok) {
+      return
+    }
+
+    handled = true
+    void exchange(code, verifier, redirectUri).then(result => {
+      if (pending?.id === id) {
+        settle(result)
+      }
+    })
+  })
+
+  let port: number
+
+  try {
+    port = await listen(server)
+  } catch {
+    return { ok: false, message: 'Somnus could not start the sign-in. Restart Somnus and try again.' }
+  }
+
+  redirectUri = `http://127.0.0.1:${port}/callback`
+
+  const connectUrl = new URL('/app/connect', site)
+  connectUrl.searchParams.set('redirect_uri', redirectUri)
+  connectUrl.searchParams.set('state', state)
+  connectUrl.searchParams.set('code_challenge', challenge)
+  connectUrl.searchParams.set('code_challenge_method', 'S256')
 
   return new Promise<SomnusSignInResult>(resolve => {
-    pending = { id, url: '', resolve, timer: null }
-    void run(id, openExternal, onCode)
+    pending = {
+      id,
+      url: connectUrl.toString(),
+      server,
+      resolve,
+      timer: setTimeout(() => settle({ ok: false, message: 'Sign-in timed out. Click Sign in to try again.' }), SIGN_IN_TIMEOUT_MS)
+    }
+
+    Promise.resolve(openExternal(connectUrl.toString())).catch(() =>
+      settle({ ok: false, message: 'Could not open your browser.' })
+    )
   })
 }
 
-async function run(
-  id: number,
-  openExternal: (url: string) => Promise<void> | void,
-  onCode: (code: SomnusSignInCode) => void
-) {
-  const alive = () => pending?.id === id
-
-  let start: { status: number; json: Record<string, unknown> }
-
-  try {
-    start = await postJson('/api/public/device/start', { label: deviceLabel() })
-  } catch {
-    if (alive()) {
-      settle({ ok: false, message: 'Could not reach Somnus. Check your internet connection.' })
-    }
-
-    return
-  }
-
-  if (!alive()) {
-    return
-  }
-
-  const deviceCode = typeof start.json.device_code === 'string' ? start.json.device_code : ''
-  const userCode = typeof start.json.user_code === 'string' ? start.json.user_code : ''
-
-  const url =
-    typeof start.json.verification_url_complete === 'string'
-      ? start.json.verification_url_complete
-      : `${somnusAccountsUrl()}/link`
-
-  if (start.status !== 200 || !deviceCode || !userCode) {
-    settle({
-      ok: false,
-      message:
-        start.status === 429
-          ? 'Too many sign-in attempts. Wait a few minutes and try again.'
-          : 'Somnus sign-in is temporarily unavailable. Try again in a minute.'
-    })
-
-    return
-  }
-
-  pending!.url = url
-  onCode({ userCode, url })
-  Promise.resolve(openExternal(url)).catch(() => undefined)
-
-  const expiresAt = Date.now() + Math.max(60, Number(start.json.expires_in) || 900) * 1000
-  let interval = Math.min(MAX_POLL_INTERVAL_S, Math.max(1, Number(start.json.interval) || 3))
-
-  const poll = async () => {
-    if (!alive()) {
-      return
-    }
-
-    if (Date.now() > expiresAt) {
-      settle({ ok: false, message: 'The sign-in code expired. Click Sign in to get a new one.' })
-
-      return
-    }
-
-    try {
-      const { status, json } = await postJson('/api/public/device/poll', { device_code: deviceCode })
-
-      if (!alive()) {
-        return
-      }
-
-      if (status === 200 && typeof json.api_key === 'string' && json.api_key) {
-        settle({
-          ok: true,
-          key: json.api_key,
-          gatewayUrl: typeof json.gateway_url === 'string' && json.gateway_url ? json.gateway_url : SOMNUS.gatewayUrl,
-          email: typeof json.email === 'string' ? json.email : ''
-        })
-
-        return
-      }
-
-      if (status === 403 || json.status === 'denied') {
-        settle({ ok: false, message: 'Sign-in was cancelled in the browser.' })
-
-        return
-      }
-
-      if (status === 404 || status === 410 || json.status === 'expired' || json.status === 'not_found') {
-        settle({ ok: false, message: 'The sign-in code expired. Click Sign in to get a new one.' })
-
-        return
-      }
-
-      if (status === 429) {
-        interval = Math.min(MAX_POLL_INTERVAL_S, interval * 2)
-      }
-    } catch {
-      // Network blip: keep polling until the code expires.
-    }
-
-    if (alive()) {
-      pending!.timer = setTimeout(() => void poll(), interval * 1000)
-    }
-  }
-
-  pending!.timer = setTimeout(() => void poll(), interval * 1000)
-}
-
-/** Opens the approval page again (the customer closed the tab, or the browser didn't open). */
+/** Opens the sign-in page again (the customer closed the tab, or the browser didn't open). */
 export function reopenSomnusSignIn(openExternal: (url: string) => Promise<void> | void): boolean {
   if (!pending?.url) {
     return false
@@ -214,9 +181,8 @@ export function cancelSomnusSignIn() {
 }
 
 /**
- * somnus://auth was the callback of the older browser handoff. Sign-in no longer
- * uses it, but the link is still swallowed here so a stale one never reaches
- * the renderer as an unknown deep link.
+ * somnus://auth was the callback of an older sign-in. It is still swallowed
+ * here so a stale link never reaches the renderer as an unknown deep link.
  */
 export function handleSomnusAuthDeepLink(kind: string, _params: Record<string, string>): boolean {
   return kind === 'auth'

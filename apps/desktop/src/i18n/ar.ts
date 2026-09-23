@@ -2540,7 +2540,7 @@ export const ar = defineLocale({
     somnusAccountSwitch: 'تبديل الحساب',
     somnusAccountOpen: 'فتح حسابي',
     somnusSignInWaitingTitle: 'أكمل تسجيل الدخول في المتصفح',
-    somnusSignInCodeHint: 'تأكد من أن المتصفح يعرض هذا الرمز، ثم انقر على «تسجيل الدخول» هناك.',
+    somnusSignInWaitingHint: 'سجّل الدخول أو أنشئ حسابك في الصفحة التي فُتحت للتو. سيتصل Somnus تلقائيًا عند الانتهاء.',
     somnusSignInReopen: 'افتح المتصفح مرة أخرى',
     somnusAccountSignedInAs: email => `مسجّل الدخول باسم ${email}`,
     somnusAccountBalance: 'الرصيد',

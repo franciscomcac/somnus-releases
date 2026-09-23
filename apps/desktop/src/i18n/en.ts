@@ -3775,7 +3775,7 @@ export const en: Translations = {
     somnusAccountSwitch: 'Switch account',
     somnusAccountOpen: 'Open my account',
     somnusSignInWaitingTitle: 'Finish signing in in your browser',
-    somnusSignInCodeHint: 'Check that the browser shows this code, then click Sign in there.',
+    somnusSignInWaitingHint: 'Sign in or create your account on the page that just opened. Somnus connects by itself when you\'re done.',
     somnusSignInReopen: 'Open the browser again',
     somnusAccountSignedInAs: email => `Signed in as ${email}`,
     somnusAccountBalance: 'Balance',

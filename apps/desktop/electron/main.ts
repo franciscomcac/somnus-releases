@@ -17963,16 +17963,22 @@ ipcMain.on('hermes:devtools:disable-f12', (_event, on) => {
   }
 })
 
-ipcMain.handle('somnus:sign-in:start', event =>
-  startSomnusSignIn(
-    url => shell.openExternal(url),
-    code => {
-      if (!event.sender.isDestroyed()) {
-        event.sender.send('somnus:sign-in-code', code)
-      }
+ipcMain.handle('somnus:sign-in:start', async event => {
+  const result = await startSomnusSignIn(url => shell.openExternal(url))
+  // The customer is in the browser: bring Somnus back to the front once signed in.
+  const win = BrowserWindow.fromWebContents(event.sender)
+
+  if (result.ok && win && !win.isDestroyed()) {
+    if (win.isMinimized()) {
+      win.restore()
     }
-  )
-)
+
+    win.show()
+    win.focus()
+  }
+
+  return result
+})
 ipcMain.handle('somnus:sign-in:reopen', () => reopenSomnusSignIn(url => shell.openExternal(url)))
 ipcMain.handle('somnus:sign-in:cancel', () => cancelSomnusSignIn())
 ipcMain.handle('somnus:update:get', () => checkSomnusUpdateNow())

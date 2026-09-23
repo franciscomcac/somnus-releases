@@ -3234,7 +3234,7 @@ export const ru = defineLocale({
     somnusAccountSwitch: 'Сменить аккаунт',
     somnusAccountOpen: 'Открыть аккаунт',
     somnusSignInWaitingTitle: 'Завершите вход в браузере',
-    somnusSignInCodeHint: 'Убедитесь, что браузер показывает этот код, и нажмите там «Войти».',
+    somnusSignInWaitingHint: 'Войдите или создайте аккаунт на открывшейся странице. Когда закончите, Somnus подключится сам.',
     somnusSignInReopen: 'Открыть браузер снова',
     somnusAccountSignedInAs: email => `Вы вошли как ${email}`,
     somnusAccountBalance: 'Баланс',

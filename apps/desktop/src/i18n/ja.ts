@@ -2944,7 +2944,7 @@ export const ja = defineLocale({
     somnusAccountSwitch: 'アカウントを切り替える',
     somnusAccountOpen: 'アカウントを開く',
     somnusSignInWaitingTitle: 'ブラウザでサインインを完了してください',
-    somnusSignInCodeHint: 'ブラウザに同じコードが表示されていることを確認してから、そこで「サインイン」をクリックしてください。',
+    somnusSignInWaitingHint: '開いたページでサインインするか、アカウントを作成してください。完了すると Somnus が自動的に接続します。',
     somnusSignInReopen: 'ブラウザをもう一度開く',
     somnusAccountSignedInAs: email => `${email} でサインイン中`,
     somnusAccountBalance: '残高',

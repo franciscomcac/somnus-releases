@@ -599,7 +599,6 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
   const [waiting, setWaiting] = useState(false)
-  const [code, setCode] = useState<null | string>(null)
   const [showKeyForm, setShowKeyForm] = useState(false)
   const [error, setError] = useState<null | string>(null)
   const canSave = value.trim().length > 0
@@ -623,13 +622,9 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
     }
 
     setError(null)
-    setCode(null)
     setWaiting(true)
-    const off = window.hermesDesktop.onSomnusSignInCode?.(c => setCode(c.userCode))
     const result = await window.hermesDesktop.somnusSignIn()
-    off?.()
     setWaiting(false)
-    setCode(null)
 
     if (result.ok) {
       await connectKey(result.key)
@@ -651,37 +646,23 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
     if (waiting) {
       return (
         <div className="grid gap-3">
-          <div className="grid gap-1">
-            <span className="text-[length:var(--conversation-text-font-size)] font-semibold">
-              {t.onboarding.somnusSignInWaitingTitle}
-            </span>
-            <p className="text-xs leading-5 text-muted-foreground">
-              {code ? t.onboarding.somnusSignInCodeHint : t.onboarding.somnusSignInWaiting}
-            </p>
-          </div>
-          <div className="flex min-h-14 items-center justify-center rounded-md border border-border/70 bg-muted/40 py-3">
-            {code ? (
-              <span className="select-all font-mono text-2xl font-semibold tracking-[0.18em]">{code}</span>
-            ) : (
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            )}
+          <div className="flex items-start gap-3">
+            <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-muted-foreground" />
+            <div className="grid gap-1">
+              <span className="text-[length:var(--conversation-text-font-size)] font-semibold">
+                {t.onboarding.somnusSignInWaitingTitle}
+              </span>
+              <p className="text-xs leading-5 text-muted-foreground">{t.onboarding.somnusSignInWaitingHint}</p>
+            </div>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <Button
-              disabled={!code}
-              onClick={() => void window.hermesDesktop?.somnusReopenSignIn?.()}
-              size="sm"
-              variant="ghost"
-            >
+            <Button onClick={() => void window.hermesDesktop?.somnusReopenSignIn?.()} size="sm" variant="ghost">
               <ExternalLink />
               {t.onboarding.somnusSignInReopen}
             </Button>
-            <div className="flex items-center gap-2">
-              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-              <Button onClick={cancel} size="sm" variant="ghost">
-                {t.common.cancel}
-              </Button>
-            </div>
+            <Button onClick={cancel} size="sm" variant="ghost">
+              {t.common.cancel}
+            </Button>
           </div>
         </div>
       )

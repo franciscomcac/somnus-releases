@@ -20,14 +20,13 @@ export {}
 declare global {
   interface Window {
     hermesDesktop: {
-      // Somnus: browser sign-in by device pairing (electron/somnus-signin.ts).
+      // Somnus: browser sign-in (loopback + PKCE) (electron/somnus-signin.ts).
       somnusSignIn?: () => Promise<
         | { ok: true; key: string; gatewayUrl: string; email: string }
         | { ok: false; message: string; cancelled?: boolean }
       >
       somnusCancelSignIn?: () => Promise<void>
       somnusReopenSignIn?: () => Promise<boolean>
-      onSomnusSignInCode?: (callback: (code: { userCode: string; url: string }) => void) => () => void
       // Somnus: background auto-update state (electron/somnus-updater.ts).
       somnusUpdateState?: () => Promise<SomnusUpdateState>
       somnusInstallUpdate?: () => Promise<boolean>

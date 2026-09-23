@@ -2910,7 +2910,7 @@ export const zhHant = defineLocale({
     somnusAccountSwitch: '切換帳戶',
     somnusAccountOpen: '開啟我的帳戶',
     somnusSignInWaitingTitle: '請在瀏覽器中完成登入',
-    somnusSignInCodeHint: '確認瀏覽器顯示的是這組代碼，然後在瀏覽器中點選「登入」。',
+    somnusSignInWaitingHint: '請在剛開啟的頁面中登入或建立帳戶。完成後 Somnus 會自動連線。',
     somnusSignInReopen: '重新開啟瀏覽器',
     somnusAccountSignedInAs: email => `已登入：${email}`,
     somnusAccountBalance: '餘額',

@@ -3617,7 +3617,7 @@ export const zh = defineLocale({
     somnusAccountSwitch: '切换账户',
     somnusAccountOpen: '打开我的账户',
     somnusSignInWaitingTitle: '请在浏览器中完成登录',
-    somnusSignInCodeHint: '确认浏览器显示的是这个代码，然后在浏览器中点击“登录”。',
+    somnusSignInWaitingHint: '请在刚打开的页面中登录或创建账户。完成后 Somnus 会自动连接。',
     somnusSignInReopen: '重新打开浏览器',
     somnusAccountSignedInAs: email => `已登录：${email}`,
     somnusAccountBalance: '余额',

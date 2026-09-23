@@ -3215,7 +3215,7 @@ export interface Translations {
     somnusAccountSwitch: string
     somnusAccountOpen: string
     somnusSignInWaitingTitle: string
-    somnusSignInCodeHint: string
+    somnusSignInWaitingHint: string
     somnusSignInReopen: string
     somnusAccountSignedInAs: (email: string) => string
     somnusAccountBalance: string

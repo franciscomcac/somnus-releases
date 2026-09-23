@@ -16,7 +16,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 # The Somnus accounts website. SOMNUS_ACCOUNTS_URL overrides it (testing a new site).
-SOMNUS_ACCOUNTS_URL = (os.environ.get("SOMNUS_ACCOUNTS_URL") or "https://accounts-production-3073.up.railway.app").rstrip("/")
+SOMNUS_ACCOUNTS_URL = (os.environ.get("SOMNUS_ACCOUNTS_URL") or "https://somnus.world").rstrip("/")
 SOMNUS_GATEWAY_HOSTS = frozenset({"gateway-production-c837.up.railway.app"})
 _TIMEOUT_S = 10
 
@@ -117,20 +117,9 @@ def _raise_http(exc: urllib.error.HTTPError):
 
 
 def fetch_account_summary(key: str | None = None) -> dict[str, Any]:
-    """POST /api/app/balance (falls back to /api/public/account on sites without it).
+    """Balance + usage for /balance and /dashboard, from GET /api/public/account.
     Raises SomnusAccountError with a message fit for the user."""
-    key = key or somnus_key()
-    if not key:
-        raise SomnusAccountError(_NOT_SIGNED_IN)
-    try:
-        return _request("/api/app/balance", key, "POST")
-    except urllib.error.HTTPError as exc:
-        if exc.code in (404, 405):
-            return _from_public(fetch_public_account(key))
-        _raise_http(exc)
-    except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
-        raise SomnusAccountError(
-            "Couldn't reach Somnus. Check your internet connection and try again.") from exc
+    return _from_public(fetch_public_account(key))
 
 
 def _usd(n: Any, digits: int = 2) -> str:
@@ -171,7 +160,7 @@ def format_balance(summary: dict[str, Any]) -> str:
                 f"{m.get('model')} {_small_usd(m.get('spend_usd'))}" for m in top))
     if summary.get("blocked") or float(left or 0) <= 0.05:
         lines.append("You're out of credit. Top up to keep using Somnus: " + str(summary.get("topup_url") or
-                                                                              f"{SOMNUS_ACCOUNTS_URL}/dashboard#buy"))
+                                                                              f"{SOMNUS_ACCOUNTS_URL}/billing"))
     elif float(left or 0) < 1:
         lines.append("Running low. Top up any time: " + str(summary.get("topup_url") or ""))
     lines.append("")
