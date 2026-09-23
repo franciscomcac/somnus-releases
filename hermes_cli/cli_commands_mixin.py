@@ -1118,6 +1118,31 @@ class CLICommandsMixin:
         reply = execute_command("profile", CommandContext(surface="cli"))
         _say_block(f"  Profile: {reply.data['profile']}", f"  Home:    {reply.data['home']}")
 
+    # ---- Somnus: /balance, /dashboard ------------------------------------------------------
+
+    def _handle_balance_command(self, cmd_original: str = ""):
+        """Somnus balance, recent spend and a signed-in dashboard link."""
+        from hermes_cli.slash_exec import CommandContext, execute_command
+        reply = execute_command("balance", CommandContext(surface="cli"))
+        _say_block(*(f"  {line}" if line else "" for line in reply.text.splitlines()))
+
+    def _handle_dashboard_command(self, cmd_original: str = ""):
+        """Open the Somnus usage dashboard in the browser (already signed in)."""
+        from hermes_cli.slash_exec import CommandContext, execute_command
+        reply = execute_command("dashboard", CommandContext(surface="cli"))
+        url = str(reply.data.get("url") or "")
+        if not url:
+            _say_block(f"  {reply.text}")
+            return
+        opened = False
+        try:
+            import webbrowser
+            opened = bool(webbrowser.open(url, new=2))
+        except Exception:
+            opened = False
+        _say_block("  Opening your Somnus dashboard in the browser..." if opened
+                   else f"  {reply.text}")
+
     # ---- /handoff -------------------------------------------------------------------------
 
     _HANDOFF_PENDING_TIMEOUT = 60.0

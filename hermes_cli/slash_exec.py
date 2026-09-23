@@ -174,13 +174,36 @@ def _exec_commands(ctx: CommandContext) -> CommandReply:
     return CommandReply("\n".join(lines), format="markdown")
 
 
+def _exec_balance(ctx: CommandContext) -> CommandReply:
+    """Core /balance text — Somnus credit left, recent spend and a dashboard link."""
+    from hermes_cli.somnus_account import SomnusAccountError, fetch_account_summary, format_balance
+    try:
+        summary = fetch_account_summary()
+    except SomnusAccountError as exc:
+        return CommandReply(str(exc), data={"ok": False})
+    return CommandReply(format_balance(summary), data={"ok": True, **summary})
+
+
+def _exec_dashboard(ctx: CommandContext) -> CommandReply:
+    """Core /dashboard text — a one-time link that opens the usage dashboard signed in."""
+    from hermes_cli.somnus_account import SomnusAccountError, fetch_account_summary
+    try:
+        summary = fetch_account_summary()
+    except SomnusAccountError as exc:
+        return CommandReply(str(exc), data={"ok": False})
+    url = str(summary.get("dashboard_url") or "")
+    return CommandReply(f"Your Somnus dashboard: {url}", data={"ok": True, "url": url})
+
+
 EXECUTORS: dict[str, Callable[[CommandContext], CommandReply]] = {
     "version": _exec_version,
     "egress": _exec_egress,
     "profile": _exec_profile,
     "bundles": _exec_bundles,
     "gateway_help": _exec_help,
-    "gateway_commands": _exec_commands}
+    "gateway_commands": _exec_commands,
+    "balance": _exec_balance,
+    "dashboard": _exec_dashboard}
 
 
 def resolve_executor(cmd_def: Any) -> Callable[[CommandContext], CommandReply] | None:

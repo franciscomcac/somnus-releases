@@ -277,6 +277,11 @@ COMMAND_REGISTRY: list[CommandDef] = [
                cli_only=True, busy_policy="dispatch"),
     CommandDef("restart", "Gracefully restart the gateway after draining active runs", "Session",
                gateway_only=True, busy_policy="dispatch", desktop="terminal"),
+    # Somnus: account balance and the usage dashboard (hermes_cli/somnus_account.py).
+    CommandDef("balance", "Show your Somnus balance and recent spend", "Info",
+               aliases=("credits",), cli_only=True, busy_policy="dispatch", execute="balance"),
+    CommandDef("dashboard", "Open your Somnus usage dashboard in the browser", "Info",
+               cli_only=True, busy_policy="dispatch", execute="dashboard"),
     CommandDef("usage", "Show token usage and rate limits; `reset` redeems a banked Codex limit reset", "Info",
                args_hint="[reset [--force]]"),
     # Somnus: Nous plans do not apply to Somnus customers — kept runnable, out of the desktop popover.
