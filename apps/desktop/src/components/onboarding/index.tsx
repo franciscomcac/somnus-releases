@@ -33,9 +33,9 @@ import {
   peekPendingProviderOAuth,
   refreshOnboarding,
   saveOnboardingApiKey,
+  saveSomnusKey,
   setOnboardingMode,
   startManualOnboarding,
-  saveSomnusKey,
   startProviderOAuth
 } from '@/store/onboarding'
 import { $onboardingSurfaces, onboardingSurfaceActive } from '@/store/onboarding-presence'
@@ -646,10 +646,8 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
       <div className="grid gap-3">
         <p className="text-xs leading-5 text-muted-foreground">{t.onboarding.somnusSignInDesc}</p>
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        <div className="flex items-center justify-between gap-3">
-          <Button className="font-medium" onClick={() => setShowKeyForm(true)} size="xs" type="button" variant="text">
-            {t.onboarding.somnusUseKey}
-          </Button>
+        {/* Somnus: sign-in only. Keys come from the customer's account, never pasted by hand. */}
+        <div className="flex items-center justify-end gap-3">
           {waiting ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{t.onboarding.somnusSignInWaiting}</span>

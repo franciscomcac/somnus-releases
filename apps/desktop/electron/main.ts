@@ -427,6 +427,9 @@ import {
   SESSION_WINDOW_MIN_WIDTH
 } from './session-windows'
 import { ensureLoginShellPath } from './shell-path'
+import { scrubProviderCredentialsFromEnv, SOMNUS } from './somnus-brand'
+import { cancelSomnusSignIn, handleSomnusAuthDeepLink, startSomnusSignIn } from './somnus-signin'
+import { checkSomnusUpdateNow, installSomnusUpdateNow, startSomnusAutoUpdate } from './somnus-updater'
 import { createBootstrapCoordinator, sshConfigFingerprint } from './ssh-bootstrap-coordinator'
 import { collectSshConfigHosts, parseSshGOutput } from './ssh-config'
 import { createSshProbeConnection, pickLocalPort, redactSecrets, SshConnection } from './ssh-connection'
@@ -534,12 +537,13 @@ import {
   writeSandboxMarker
 } from './windows-sandbox-fallback'
 import { installWindowsSystemCaTrust } from './windows-system-ca'
-import { readWindowsUserEnvVar } from './windows-user-env'
-import { SOMNUS } from './somnus-brand'
-import { cancelSomnusSignIn, handleSomnusAuthDeepLink, startSomnusSignIn } from './somnus-signin'
 import { isPackagedInstallPath as isPackagedInstallPathUnderRoots } from './workspace-cwd'
 import { readWslWindowsClipboardImage } from './wsl-clipboard-image'
 import { resolvePickerDefaultPath, setActiveGatewayProfile, setWslBridgeProfileState } from './wsl-path-bridge'
+
+// Somnus: drop provider keys/base URLs inherited from the computer before anything
+// spawns the engine, so only the customer's Somnus account can serve models.
+scrubProviderCredentialsFromEnv()
 
 const USER_DATA_OVERRIDE = process.env.HERMES_DESKTOP_USER_DATA_DIR
 
@@ -553,6 +557,10 @@ const DEV_SERVER = process.env.HERMES_DESKTOP_DEV_SERVER
 const IS_PACKAGED = app.isPackaged || Boolean(process.env.HERMES_DESKTOP_IS_PACKAGED)
 const IS_MAC = process.platform === 'darwin'
 const IS_WINDOWS = process.platform === 'win32'
+// Somnus: installed Windows builds update themselves from GitHub Releases
+// (electron-updater). The upstream git-pull-and-rebuild updater is disabled for
+// them: customers never build anything on their own computer.
+const SOMNUS_AUTO_UPDATE = app.isPackaged && IS_WINDOWS && process.env.SOMNUS_DISABLE_AUTO_UPDATE !== '1'
 const IS_WSL = isWslEnvironment()
 // Truthful macOS kernel major (Tahoe = 25). Product version lies (16 vs 26) per
 // build SDK, so gate Tahoe workarounds on Darwin instead.
@@ -4946,6 +4954,29 @@ async function isActiveRuntimeUsable() {
   )
 }
 
+// True when this packaged Somnus build was stamped with an engine commit that
+// the installed engine checkout does not contain yet (the app updated itself,
+// the engine has not). Forward-only: a newer engine than the app is fine.
+async function somnusEngineBehindApp(): Promise<boolean> {
+  const commit = INSTALL_STAMP?.commit
+
+  if (!app.isPackaged || typeof commit !== 'string' || !/^[0-9a-f]{40}$/.test(commit) || /^0+$/.test(commit)) {
+    return false
+  }
+
+  try {
+    const result = await runGit(['merge-base', '--is-ancestor', commit, 'HEAD'], { cwd: ACTIVE_HERMES_ROOT })
+
+    // 0 = engine already contains this build's commit; 1 = behind;
+    // 128 = commit unknown locally (not fetched yet), also behind.
+    return result.code !== 0
+  } catch (error) {
+    rememberLog(`[bootstrap] engine version check failed: ${error?.message || String(error)}`)
+
+    return false
+  }
+}
+
 async function activeRuntimeState() {
   // We DELIBERATELY do NOT verify that the checkout is currently at the
   // pinned commit -- users update via the in-app update path or `hermes
@@ -5293,6 +5324,14 @@ async function resolveHermesBackend(backendArgs) {
   //    active runtime is usable, launch it directly; only fall through to
   //    bootstrap when the runtime itself is unusable.
   const activeRuntime = await activeRuntimeState()
+
+  // Somnus: after the app auto-updates, the installed engine may be older than
+  // the one this build was made for. Re-run the (idempotent) installer, which
+  // pulls the engine forward and syncs its dependencies, before launching it.
+  if (activeRuntime.shouldUseActiveRuntime && !bootstrapRepairRequested && (await somnusEngineBehindApp())) {
+    rememberLog(`[bootstrap] Somnus was updated; bringing the engine up to ${String(INSTALL_STAMP?.commit).slice(0, 12)}`)
+    bootstrapRepairRequested = true
+  }
 
   if (activeRuntime.shouldUseActiveRuntime && !bootstrapRepairRequested) {
     if (!activeRuntime.hasValidMarker) {
@@ -17926,6 +17965,8 @@ ipcMain.on('hermes:devtools:disable-f12', (_event, on) => {
 
 ipcMain.handle('somnus:sign-in:start', () => startSomnusSignIn(url => shell.openExternal(url)))
 ipcMain.handle('somnus:sign-in:cancel', () => cancelSomnusSignIn())
+ipcMain.handle('somnus:update:get', () => checkSomnusUpdateNow())
+ipcMain.handle('somnus:update:install', () => installSomnusUpdateNow())
 
 ipcMain.handle('hermes:openExternal', (_event, url) => {
   if (!openExternalUrl(url)) {
@@ -18102,7 +18143,14 @@ const terminalIpc = registerTerminalIpc({
 const disposeTerminalSession = terminalIpc.disposeTerminalSession
 
 ipcMain.handle('hermes:updates:check', async (_event, opts) =>
-  checkUpdates({ force: Boolean(opts?.force) }).catch(error => ({
+  SOMNUS_AUTO_UPDATE
+    ? {
+        supported: false,
+        reason: 'somnus-auto-update',
+        message: 'Somnus keeps itself up to date. New versions download in the background and install when you restart Somnus.',
+        fetchedAt: Date.now()
+      }
+    : checkUpdates({ force: Boolean(opts?.force) }).catch(error => ({
     supported: true,
     branch: readDesktopUpdateConfig().branch,
     error: error?.kind === GIT_UNUSABLE ? GIT_UNUSABLE : 'check-failed',
@@ -18112,7 +18160,13 @@ ipcMain.handle('hermes:updates:check', async (_event, opts) =>
 )
 
 ipcMain.handle('hermes:updates:apply', async (_event, payload) =>
-  applyUpdates(payload || {}).catch(error => ({
+  (SOMNUS_AUTO_UPDATE
+    ? Promise.resolve(
+        installSomnusUpdateNow()
+          ? { ok: true }
+          : { ok: false, error: 'apply-failed', message: 'Somnus updates automatically in the background.' }
+      )
+    : applyUpdates(payload || {})).catch(error => ({
     ok: false,
     error: 'apply-failed',
     message: error?.message || String(error)
@@ -18687,6 +18741,14 @@ app.whenReady().then(() => {
   // Warm the login-shell PATH resolution immediately so it usually completes
   // before the backend start path awaits the same single-flight promise.
   void ensureLoginShellPath()
+
+  if (SOMNUS_AUTO_UPDATE) {
+    startSomnusAutoUpdate({
+      currentVersion: app.getVersion(),
+      log: line => rememberLog(line),
+      windows: () => BrowserWindow.getAllWindows()
+    })
+  }
 
   if (CRASH_DIAGNOSTICS) {
     startChromiumLogWatcher(CHROMIUM_LOG_PATH)

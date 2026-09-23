@@ -32,6 +32,15 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   // Somnus: browser sign-in handoff; resolves with the customer's gateway key.
   somnusSignIn: () => ipcRenderer.invoke('somnus:sign-in:start'),
   somnusCancelSignIn: () => ipcRenderer.invoke('somnus:sign-in:cancel'),
+  // Somnus: background auto-update (installed Windows builds).
+  somnusUpdateState: () => ipcRenderer.invoke('somnus:update:get'),
+  somnusInstallUpdate: () => ipcRenderer.invoke('somnus:update:install'),
+  onSomnusUpdateState: callback => {
+    const listener = (_event, payload) => callback(payload)
+    ipcRenderer.on('somnus:update-state', listener)
+
+    return () => ipcRenderer.removeListener('somnus:update-state', listener)
+  },
   getConnection: (profile, opts) => ipcRenderer.invoke('hermes:connection', profile, opts),
   // Registry-scoped backend resolution: { connectionId, profile } → descriptor.
   getConnectionFor: payload => ipcRenderer.invoke('hermes:connection:for', payload),

@@ -69,6 +69,30 @@ interface ModelOptionsResult {
   providers?: ModelProviderOption[]
 }
 
+// Somnus: only the Somnus gateway serves models (mirror of lib/somnus.ts; plugins
+// can't import app internals).
+const SOMNUS_GATEWAY_HOST = 'gateway-production-c837.up.railway.app'
+
+function somnusOnlyModelOptions(result: ModelOptionsResult): ModelOptionsResult {
+  const allowAll = (globalThis as { __SOMNUS_ALLOW_ALL_PROVIDERS__?: boolean }).__SOMNUS_ALLOW_ALL_PROVIDERS__
+
+  if (allowAll || !result || !Array.isArray(result.providers)) {
+    return result
+  }
+
+  return {
+    ...result,
+    providers: result.providers.filter(row => {
+      const r = row as unknown as Record<string, unknown>
+      const aliases = Array.isArray(r.aliases) ? r.aliases : []
+
+      return [r.api_url, r.slug, r.name, ...aliases].some(v =>
+        String(v ?? '').toLowerCase().includes(SOMNUS_GATEWAY_HOST)
+      )
+    })
+  }
+}
+
 function useModelOptions(bot: null | RosterRow = null) {
   // Hook body runs during render: an orphaned row must paint the picker
   // disabled/erroring, not throw into the pane's error boundary.
@@ -89,7 +113,7 @@ function useModelOptions(bot: null | RosterRow = null) {
           include_unconfigured: true,
           explicit_only: false
         }) as Promise<ModelOptionsResult>
-      ),
+      ).then(somnusOnlyModelOptions),
     enabled: !orphaned,
     staleTime: 120000,
     retry: false

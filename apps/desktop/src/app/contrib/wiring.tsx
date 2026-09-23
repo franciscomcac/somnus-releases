@@ -147,6 +147,7 @@ import {
 } from '../shell/titlebar'
 import { TitlebarControls } from '../shell/titlebar-controls'
 import { WslgWindowControls } from '../shell/wslg-window-controls'
+import { SomnusUpdateNotifier } from '../somnus-update-notifier'
 import { UpdatesOverlay } from '../updates-overlay'
 
 import { ContribWiringContext } from './context'
@@ -1341,6 +1342,7 @@ export function ContribWiring({ children }: { children: ReactNode }) {
         profile={activeGatewayProfile}
       />
       <UpdatesOverlay />
+      <SomnusUpdateNotifier />
       <GatewayConnectingOverlay />
       <BootFailureOverlay />
       <CommandPalette />

@@ -2,6 +2,8 @@ import type { ModelCapabilities, ModelOptionProvider, ModelOptionsResult } from 
 
 import { getGlobalModelOptions, type HermesGateway } from '@/hermes'
 
+import { somnusOnlyModelOptions } from './somnus'
+
 type CatalogProviderIdentity = Pick<ModelOptionProvider, 'aliases' | 'name' | 'slug'>
 
 /** True when `currentProvider` is this catalog row — slug, display name, or
@@ -79,7 +81,11 @@ function restModelOptions(
   return profileKey ? getGlobalModelOptions(opts, profileKey) : getGlobalModelOptions(opts)
 }
 
-export async function requestModelOptions({
+export async function requestModelOptions(req: ModelOptionsRequest): Promise<ModelOptionsResult> {
+  return somnusOnlyModelOptions(await requestModelOptionsUnfiltered(req))
+}
+
+async function requestModelOptionsUnfiltered({
   explicitOnly = true,
   gateway,
   profile,

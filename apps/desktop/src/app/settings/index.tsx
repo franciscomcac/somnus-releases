@@ -2,7 +2,6 @@ import { useStore } from '@nanostores/react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 
-import { codiconIcon } from '@/components/ui/codicon'
 import { KbdCombo } from '@/components/ui/kbd'
 import { Tip } from '@/components/ui/tooltip'
 import { getHermesConfigDefaults, getHermesConfigRecord, saveHermesConfig } from '@/hermes'
@@ -12,7 +11,6 @@ import {
   Archive,
   BarChart3,
   Bell,
-  Cpu,
   Download,
   Globe,
   Info,
@@ -23,8 +21,7 @@ import {
   Settings2,
   ShieldLock,
   Upload,
-  Wrench,
-  Zap
+  Wrench
 } from '@/lib/icons'
 import { isEditableTarget } from '@/lib/keybinds/combo'
 import { typeToFocusChar } from '@/lib/keybinds/composer-focus-keys'
@@ -33,7 +30,6 @@ import { $commandPaletteOpen, openCommandPalettePage } from '@/store/command-pal
 import { confirm } from '@/store/confirm'
 import { $activeConnectionId } from '@/store/connections'
 import { bindingsFor } from '@/store/keybinds'
-import { $localModelsEnabled } from '@/store/local-models-flag'
 import { notifyError } from '@/store/notifications'
 import { $settingsScopeProfile } from '@/store/settings-scope'
 
@@ -54,8 +50,9 @@ import { KEYS_VIEWS, KeysSettings, type KeysView } from './keys-settings'
 import { movedSettingsTabRedirect } from './moved-tabs'
 import { NotificationsSettings } from './notifications-settings'
 import { SettingsBreadcrumbContext } from './primitives'
-import { PROVIDER_VIEWS, ProvidersSettings, type ProviderView } from './providers-settings'
+import { PROVIDER_VIEWS, type ProviderView } from './providers-settings'
 import { SessionsSettings } from './sessions-settings'
+import { SomnusAccountSettings } from './somnus-account-settings'
 import { SettingsSubpageHeader } from './subpage-navigation'
 import { resolveSettingsSubpage, settingsSubpageIcon, settingsSubpages } from './subpages'
 import type { SettingsPageProps, SettingsView as SettingsViewId } from './types'
@@ -299,49 +296,13 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
             onSelect: () => setActiveView('billing')
           }] : []),
           {
+            // Somnus: no provider accounts, API keys or custom endpoints; the
+            // customer's Somnus account is the only source of models.
             active: activeView === 'providers',
-            children: [
-              {
-                active: activeView === 'providers' && providerView === 'accounts',
-                icon: codiconIcon('account'),
-                id: 'pview:accounts',
-                label: t.settings.nav.providerAccounts,
-                onSelect: () => openProviderView('accounts')
-              },
-              {
-                active: activeView === 'providers' && providerView === 'keys',
-                icon: KeyRound,
-                id: 'pview:keys',
-                label: t.settings.nav.providerApiKeys,
-                onSelect: () => openProviderView('keys')
-              },
-              {
-                active: activeView === 'providers' && providerView === 'custom-endpoints',
-                icon: Globe,
-                id: 'pview:custom-endpoints',
-                label: t.settings.nav.providerCustomEndpoints,
-                onSelect: () => openProviderView('custom-endpoints')
-              },
-              // Local models ships behind the --local launch flag: no flag, no
-              // nav entry (the pane itself also refuses to render, so a stale
-              // ?pview=local deep link falls back to accounts-shaped emptiness
-              // rather than a hidden feature).
-              ...($localModelsEnabled.get()
-                ? [
-                    {
-                      active: activeView === 'providers' && providerView === 'local',
-                      icon: Cpu,
-                      id: 'pview:local',
-                      label: t.settings.nav.providerLocalModels,
-                      onSelect: () => openProviderView('local')
-                    }
-                  ]
-                : [])
-            ],
             gapBefore: true,
-            icon: Zap,
+            icon: KeyRound,
             id: 'providers',
-            label: t.settings.nav.providers,
+            label: t.onboarding.somnusAccountNav,
             onSelect: () => setActiveView('providers')
           },
           {
@@ -419,11 +380,9 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
       billingView,
       canViewPlans,
       keysView,
-      providerView,
       subpage,
       t,
       setActiveView,
-      openProviderView,
       openKeysView,
       openSettingsPage,
       openSubView
@@ -536,14 +495,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
         subpage={subpage}
       />
     ) : activeView === 'providers' ? (
-      <ProvidersSettings
-        key={scopeProfile}
-        onClose={onClose}
-        onConfigSaved={onConfigSaved}
-        onMainModelChanged={onMainModelChanged}
-        onViewChange={setProviderView}
-        view={providerView}
-      />
+      <SomnusAccountSettings />
     ) : activeView === 'keys' ? (
       <KeysSettings view={keysView} />
     ) : activeView === 'notifications' ? (

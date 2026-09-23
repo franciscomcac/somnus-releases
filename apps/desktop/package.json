@@ -121,6 +121,7 @@
     "dnd-core": "14.0.1",
     "dompurify": "3.4.13",
     "driver.js": "1.8.0",
+    "electron-updater": "6.8.9",
     "emojibase-data": "16.0.3",
     "fflate": "0.8.3",
     "frimousse": "0.3.0",
@@ -312,6 +313,14 @@
       "warningsAsErrors": false,
       "createDesktopShortcut": true,
       "runAfterFinish": true
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "franciscomcac",
+        "repo": "somnus-releases",
+        "releaseType": "release"
+      }
+    ]
   }
 }

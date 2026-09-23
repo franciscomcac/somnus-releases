@@ -64,3 +64,7 @@ globalThis.IntersectionObserver = class {
 // as the 15s testTimeout above it while still finishing below it, so a
 // genuinely hung await still surfaces as this assertion, not a test timeout.
 configure({ asyncUtilTimeout: 12_000 })
+
+// Somnus filters every model list down to the Somnus gateway; upstream suites
+// test the generic multi-provider picker, so they opt out (see lib/somnus.ts).
+;(globalThis as { __SOMNUS_ALLOW_ALL_PROVIDERS__?: boolean }).__SOMNUS_ALLOW_ALL_PROVIDERS__ = true

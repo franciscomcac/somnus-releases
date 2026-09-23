@@ -218,6 +218,16 @@ function IdleView({
     )
   }
 
+  if (!status.supported && status.reason === 'somnus-auto-update') {
+    return (
+      <CenteredStatus
+        body={u.somnusAutoMessage}
+        icon={<AlertCircle className="size-6 text-muted-foreground" />}
+        title={u.somnusAutoTitle}
+      />
+    )
+  }
+
   if (!status.supported) {
     // A copy without version-control metadata can't self-update; the website
     // carries the current installer (same URL as Settings → About).

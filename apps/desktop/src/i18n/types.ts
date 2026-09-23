@@ -496,6 +496,9 @@ export interface Translations {
     updateReadyMessage: (count: number) => string
     updateReadyMessageUnknown: string
     seeWhatsNew: string
+    somnusUpdateReadyTitle: string
+    somnusUpdateReadyMessage: (version: string) => string
+    somnusUpdateRestart: string
     mcp: {
       needsAuthTitle: string
       needsAuthMessage: (name: string) => string
@@ -3049,6 +3052,8 @@ export interface Translations {
     checkFailedTitle: string
     tryAgain: string
     notAvailableTitle: string
+    somnusAutoTitle: string
+    somnusAutoMessage: string
     unsupportedMessage: string
     connectionRetry: string
     gitUnusable: string
@@ -3204,6 +3209,11 @@ export interface Translations {
     somnusSignInWaiting: string
     somnusUseKey: string
     somnusSignInFailed: string
+    somnusAccountNav: string
+    somnusAccountTitle: string
+    somnusAccountDesc: string
+    somnusAccountSwitch: string
+    somnusAccountOpen: string
     preparingInstall: string
     starting: string
     lookingUpProviders: string

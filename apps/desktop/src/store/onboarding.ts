@@ -1,5 +1,4 @@
 import type { ModelOptionProvider } from '@hermes/shared'
-import { pickSomnusDefaultModel, SOMNUS_GATEWAY_URL } from '@/lib/somnus'
 import { atom } from 'nanostores'
 
 import {
@@ -16,6 +15,7 @@ import {
 import { translateNow } from '@/i18n'
 import { isProviderSetupErrorMessage } from '@/lib/provider-setup-errors'
 import { evaluateRuntimeReadiness, type RuntimeReadinessResult } from '@/lib/runtime-readiness'
+import { pickSomnusDefaultModel, SOMNUS_GATEWAY_URL, somnusAccountOnly } from '@/lib/somnus'
 import { ackFreeTierNotice, freeTierReadyPending, refreshFreeTierStatus, setFreeTierRoute } from '@/store/free-tier'
 import { setMainModelAssignment } from '@/store/model-assignment'
 import { notify, notifyError } from '@/store/notifications'
@@ -572,6 +572,13 @@ export function startManualOnboarding(reason: null | string = DEFAULT_MANUAL_ONB
 // (`custom` is not an OAuth provider, so the generic manual flow would just
 // re-show the picker — the original "booted back to the first screen" loop).
 export function startManualLocalEndpoint(reason: null | string = null, profile?: string) {
+  // Somnus: no custom endpoints. Every "set up a provider" path lands on Somnus sign-in.
+  if (somnusAccountOnly()) {
+    startManualOnboarding(undefined, profile)
+
+    return
+  }
+
   cancelOnboardingFlow()
   pendingProviderOAuthId = null
   patch({
@@ -595,6 +602,12 @@ export function startManualLocalEndpoint(reason: null | string = null, profile?:
 let pendingProviderOAuthId: null | string = null
 
 export function startManualProviderOAuth(providerId: string, profile?: string) {
+  if (somnusAccountOnly()) {
+    startManualOnboarding(undefined, profile)
+
+    return
+  }
+
   pendingProviderOAuthId = providerId
   startManualOnboarding(null, profile)
 }

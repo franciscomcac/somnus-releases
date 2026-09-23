@@ -26,6 +26,10 @@ declare global {
         | { ok: false; message: string; cancelled?: boolean }
       >
       somnusCancelSignIn?: () => Promise<void>
+      // Somnus: background auto-update state (electron/somnus-updater.ts).
+      somnusUpdateState?: () => Promise<SomnusUpdateState>
+      somnusInstallUpdate?: () => Promise<boolean>
+      onSomnusUpdateState?: (callback: (state: SomnusUpdateState) => void) => () => void
       // Resolve a backend connection. Omit `profile` (or pass the primary) for
       // the window's backend; pass a named profile to lazily spawn/reuse that
       // profile's backend from the pool.
@@ -725,6 +729,14 @@ export interface DesktopUpdateCommit {
   summary: string
   author: string
   at: number
+}
+
+export interface SomnusUpdateState {
+  status: 'idle' | 'checking' | 'downloading' | 'ready' | 'error'
+  currentVersion: string
+  version: null | string
+  percent: null | number
+  message: null | string
 }
 
 export interface DesktopUpdateStatus {

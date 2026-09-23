@@ -49,7 +49,9 @@ const dist = electronDistDir()
 // (only the repo root does) and no "repository" field in its package.json —
 // so it fails with "Cannot detect repository by .git/config". Pin publish to
 // "never" so electron-builder skips that lookup entirely.
-const args = ["--publish", "never"]
+// Somnus: the release script passes `--publish always` to upload to GitHub
+// Releases (auto-update feed); every other build stays local-only.
+const args = process.argv.slice(2).includes("--publish") ? [] : ["--publish", "never"]
 const localElectronDist = dist && fs.existsSync(distBinary(dist)) ? dist : null
 if (!localElectronDist) {
   console.warn(
