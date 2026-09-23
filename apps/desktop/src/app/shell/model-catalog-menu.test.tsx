@@ -207,3 +207,32 @@ describe('in-flight local downloads', () => {
     expect(screen.queryByText('Local')).toBeNull()
   })
 })
+
+describe('Somnus vendor groups', () => {
+  it('splits the gateway into Claude / ChatGPT / Gemini groups, collapsed until opened', async () => {
+    getGlobalModelOptions.mockResolvedValue({
+      providers: [
+        {
+          api_url: 'https://gateway-production-c837.up.railway.app/v1',
+          models: ['claude-sonnet-5', 'claude-opus-5', 'gpt-6-astra', 'gemini-3.8-flash', 'deepseek-v4-flash'],
+          name: 'gateway-production-c837.up.railway.app',
+          slug: 'custom:gateway-production-c837.up.railway.app'
+        }
+      ]
+    })
+
+    renderMenu()
+
+    await screen.findByText('Claude')
+    expect(screen.getByText('ChatGPT')).toBeTruthy()
+    expect(screen.getByText('Gemini')).toBeTruthy()
+    expect(screen.getByText('DeepSeek')).toBeTruthy()
+    expect(screen.queryByText(/gateway-production/i)).toBeNull()
+    // Collapsed by default: no model rows until a vendor is opened.
+    expect(screen.queryByText(/Sonnet 5/i)).toBeNull()
+
+    fireEvent.click(screen.getByText('Claude'))
+    await screen.findByText(/Sonnet 5/i)
+    expect(screen.queryByText(/Astra/i)).toBeNull()
+  })
+})

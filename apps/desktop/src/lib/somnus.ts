@@ -67,3 +67,32 @@ export function somnusOnlyModelOptions<T extends { providers?: null | readonly P
 
   return { ...result, providers: result.providers.filter(isSomnusProvider) }
 }
+
+// The Somnus gateway serves every vendor's models under one provider. The model
+// picker splits that one long list into recognizable vendor groups.
+export interface SomnusVendor {
+  key: string
+  label: string
+  order: number
+}
+
+const SOMNUS_VENDORS: ReadonlyArray<SomnusVendor & { match: RegExp }> = [
+  { key: 'claude', label: 'Claude', order: 0, match: /^(anthropic\/)?claude/ },
+  { key: 'chatgpt', label: 'ChatGPT', order: 1, match: /^(openai\/)?(gpt|o\d|chatgpt|codex)/ },
+  { key: 'gemini', label: 'Gemini', order: 2, match: /^(google\/)?(gemini|gemma)/ },
+  { key: 'grok', label: 'Grok', order: 3, match: /^(xai\/)?grok/ },
+  { key: 'deepseek', label: 'DeepSeek', order: 4, match: /^(deepseek\/)?deepseek/ },
+  { key: 'kimi', label: 'Kimi', order: 5, match: /^(moonshot(ai)?\/)?kimi/ },
+  { key: 'qwen', label: 'Qwen', order: 6, match: /^(qwen\/)?qwen/ },
+  { key: 'glm', label: 'GLM', order: 7, match: /^(z-?ai\/|zhipu\/)?glm/ },
+  { key: 'mimo', label: 'MiMo', order: 8, match: /^(xiaomi\/)?mimo/ }
+]
+
+const OTHER_VENDOR: SomnusVendor = { key: 'other', label: 'Other', order: 99 }
+
+export function somnusModelVendor(modelId: string): SomnusVendor {
+  const id = modelId.trim().toLowerCase()
+  const hit = SOMNUS_VENDORS.find(v => v.match.test(id))
+
+  return hit ? { key: hit.key, label: hit.label, order: hit.order } : OTHER_VENDOR
+}

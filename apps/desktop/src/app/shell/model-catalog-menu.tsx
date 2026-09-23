@@ -27,6 +27,7 @@ import { isSubmitEnter } from '@/lib/ime'
 import { catalogProviderMatches, modelOptionsQueryKey, requestModelOptions } from '@/lib/model-options'
 import { displayModelName, modelDisplayParts } from '@/lib/model-status-label'
 import { reasoningEffortLabel } from '@/lib/reasoning-effort'
+import { isSomnusProvider, somnusModelVendor } from '@/lib/somnus'
 import { foldIncludes, normalize } from '@/lib/text'
 import { useStoreSelector } from '@/lib/use-session-slice'
 import { cn } from '@/lib/utils'
@@ -114,6 +115,29 @@ interface ModelCatalogMenuProps {
 interface ProviderGroup {
   families: ModelFamily[]
   provider: ModelOptionProvider
+  /** Somnus: vendor sub-group of the gateway provider (Claude, ChatGPT, ...). */
+  key?: string
+  label?: string
+  order?: number
+  /** Vendor groups start collapsed unless they hold the active model. */
+  defaultCollapsed?: boolean
+}
+
+const groupKey = (group: ProviderGroup): string => group.key ?? group.provider.slug
+
+function isGroupCollapsed(group: ProviderGroup, collapsed: readonly string[], search: string): boolean {
+  if (search) {
+    return false
+  }
+
+  const key = groupKey(group)
+
+  return group.defaultCollapsed ? !collapsed.includes(`open:${key}`) : collapsed.includes(key)
+}
+
+function toggleGroup(group: ProviderGroup): void {
+  const key = groupKey(group)
+  toggleCollapsedProvider(group.defaultCollapsed ? `open:${key}` : key)
 }
 
 /**
@@ -327,7 +351,7 @@ export function ModelCatalogMenu({
   const kbRows = useMemo<KbRow[]>(
     () => [
       ...groups.flatMap(group =>
-        collapsedProviders.includes(group.provider.slug) && !search
+        isGroupCollapsed(group, collapsedProviders, search)
           ? []
           : group.families.map((family): KbRow => ({
               family,
@@ -461,20 +485,20 @@ export function ModelCatalogMenu({
 
             // Collapsed when the user stored it (and not while searching, which
             // spans every model regardless of collapse state).
-            const collapsed = collapsedProviders.includes(slug) && !search
+            const collapsed = isGroupCollapsed(group, collapsedProviders, search)
 
             return (
-              <DropdownMenuGroup className="py-0.5" key={slug}>
+              <DropdownMenuGroup className="py-0.5" key={groupKey(group)}>
                 <DropdownMenuItem
                   className="group/label flex w-full items-center gap-1 px-2 pb-0.5 pt-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-tertiary) cursor-pointer !bg-transparent focus:!bg-transparent"
                   onSelect={event => {
                     event.preventDefault()
-                    toggleCollapsedProvider(slug)
+                    toggleGroup(group)
                   }}
                   textValue=""
                 >
                   <span className="truncate">
-                    <HighlightMatches foldSeparators query={search} text={group.provider.name} />
+                    <HighlightMatches foldSeparators query={search} text={group.label ?? group.provider.name} />
                   </span>
                   <DisclosureCaret
                     className="shrink-0 text-(--ui-text-tertiary) opacity-0 transition group-hover/label:opacity-100"
@@ -736,6 +760,9 @@ function groupModels(
     if (q) {
       // Search spans every family, regardless of visibility.
       shown = new Set(allFamilies.filter(matches).map(family => family.id))
+    } else if (!visible && isSomnusProvider(provider)) {
+      // Somnus: every model is shown, split into collapsible vendor groups below.
+      shown = new Set(allFamilies.map(family => family.id))
     } else if (visible) {
       // User has customized which models show — honor their selection exactly.
       shown = new Set(
@@ -755,14 +782,36 @@ function groupModels(
 
     const families = allFamilies.filter(family => shown.has(family.id) || family.id === activeId)
 
-    if (families.length > 0) {
+    if (families.length > 0 && isSomnusProvider(provider)) {
+      // Somnus: one gateway serves every vendor; show Claude, ChatGPT, Gemini...
+      // as their own groups so the list stays short.
+      const byVendor = new Map<string, ProviderGroup>()
+
+      for (const family of families) {
+        const vendor = somnusModelVendor(family.id)
+        const key = `somnus:${vendor.key}`
+        const group = byVendor.get(key) ?? { families: [], provider, key, label: vendor.label, order: vendor.order }
+        group.families.push(family)
+        byVendor.set(key, group)
+      }
+
+      for (const group of byVendor.values()) {
+        group.defaultCollapsed = !(activeId && group.families.some(family => family.id === activeId))
+        groups.push(group)
+      }
+    } else if (families.length > 0) {
       groups.push({ families, provider })
     }
   }
 
-  // Stable, logical group order: alphabetical by provider name. (The backend
-  // floats the current provider first, which would reshuffle on every switch.)
-  groups.sort((a, b) => a.provider.name.localeCompare(b.provider.name))
+  // Stable, logical group order: Somnus vendor groups in their fixed order, then
+  // alphabetical by provider name. (The backend floats the current provider
+  // first, which would reshuffle on every switch.)
+  groups.sort(
+    (a, b) =>
+      (a.order ?? 1000) - (b.order ?? 1000) ||
+      (a.label ?? a.provider.name).localeCompare(b.label ?? b.provider.name)
+  )
 
   return groups
 }
