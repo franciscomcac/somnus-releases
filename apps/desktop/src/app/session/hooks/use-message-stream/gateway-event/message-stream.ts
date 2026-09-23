@@ -7,6 +7,7 @@ import { coerceGatewayText, coerceThinkingText } from '@/lib/chat-runtime'
 import { playCompletionSound } from '@/lib/completion-sound'
 import { parseErrorSurface } from '@/lib/error-surface'
 import { triggerHaptic } from '@/lib/haptics'
+import { SOMNUS_TOP_UP_URL, somnusAccountOnly } from '@/lib/somnus'
 import { billingCtaLabel, clearBillingBlock, runBillingRecovery, setBillingBlock } from '@/store/billing-block'
 import { clearClarifyRequest } from '@/store/clarify'
 import { setSessionCompacting } from '@/store/compaction'
@@ -37,10 +38,22 @@ function surfaceBillingBlock(sessionId: string, raw: unknown): void {
     return
   }
 
-  const block = raw as BillingBlock
+  let block = raw as BillingBlock
 
   if (typeof block.provider !== 'string') {
     return
+  }
+
+  // Somnus: every model runs on the customer's Somnus balance, so the wall is
+  // always "top up your Somnus credit" on the website, never a provider/Nous page.
+  if (somnusAccountOnly()) {
+    block = {
+      ...block,
+      billing_url: SOMNUS_TOP_UP_URL,
+      is_nous: false,
+      message: translateNow('assistant.thread.somnusOutOfCredit.body'),
+      provider_label: 'Somnus'
+    }
   }
 
   setBillingBlock(sessionId, block)

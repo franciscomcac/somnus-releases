@@ -503,6 +503,12 @@ def _save_custom_provider(base_url, api_key="", model="", context_length=None, n
             entry["key_env"] = key_env
             entry.pop("api_key", None)
             changed = True
+        elif api_key and not key_env and entry.get("api_key") and entry.get("api_key") != api_key:
+            # A new key for the same endpoint (signed in again, key rotated) must replace the
+            # inlined one: the runtime resolves this entry by base_url and would keep sending
+            # the stale key otherwise.
+            entry["api_key"] = api_key
+            changed = True
         if changed:
             cfg["custom_providers"] = providers
             save_config(cfg)
