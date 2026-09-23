@@ -3214,6 +3214,21 @@ export interface Translations {
     somnusAccountDesc: string
     somnusAccountSwitch: string
     somnusAccountOpen: string
+    somnusSignInWaitingTitle: string
+    somnusSignInCodeHint: string
+    somnusSignInReopen: string
+    somnusAccountSignedInAs: (email: string) => string
+    somnusAccountBalance: string
+    somnusAccountUsage30d: (spend: string, requests: string) => string
+    somnusAccountTopUp: string
+    somnusAccountLowCredit: string
+    somnusAccountSignOut: string
+    somnusAccountSignOutTitle: string
+    somnusAccountSignOutDesc: string
+    somnusAccountSignedOut: string
+    somnusAccountNotSignedIn: string
+    somnusAccountExpired: string
+    somnusAccountUnavailable: string
     preparingInstall: string
     starting: string
     lookingUpProviders: string
@@ -3823,6 +3838,8 @@ export interface Translations {
       /** Escape hatch when Retry would only reproduce SESSION_NOT_OWNED (#106217). */
       errorStartNewSession: string
       errorSwitchProvider: string
+      errorTopUp: string
+      somnusOutOfCredit: { title: string; body: string }
       errorChooseModel: string
       errorCompressConversation: string
       errorCompressFailed: string

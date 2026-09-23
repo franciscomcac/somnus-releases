@@ -7,6 +7,7 @@
 import type { ErrorCardCopy, Translations } from '@/i18n/types'
 
 import { errorCardKey, type ErrorSurface, isFreeTierSurface } from './error-surface'
+import { somnusAccountOnly } from './somnus'
 
 export interface ErrorCardText {
   title: string
@@ -19,6 +20,12 @@ const render = (value: ErrorCardCopy['title'], provider: string) =>
 /** The failing provider's display name for copy — the descriptor's label,
  *  else its id, else the generic "the AI service". */
 export function errorProviderName(thread: Translations['assistant']['thread'], surface?: ErrorSurface | null): string {
+  // Somnus: every model runs through the Somnus gateway (a "custom" endpoint
+  // under the hood); customers should only ever see "Somnus".
+  if (somnusAccountOnly() && surface) {
+    return 'Somnus'
+  }
+
   return surface?.providerLabel || surface?.provider || thread.errorGenericProvider
 }
 
@@ -41,6 +48,10 @@ export function errorCardText(
   }
 
   const key = errorCardKey(surface)
+
+  if (somnusAccountOnly() && 'code' in key && key.code === 'billing') {
+    return { body: thread.somnusOutOfCredit.body, title: thread.somnusOutOfCredit.title }
+  }
 
   if ('code' in key) {
     const copy = thread.errorCodes[key.code]

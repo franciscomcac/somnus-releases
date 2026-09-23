@@ -428,7 +428,7 @@ import {
 } from './session-windows'
 import { ensureLoginShellPath } from './shell-path'
 import { scrubProviderCredentialsFromEnv, SOMNUS } from './somnus-brand'
-import { cancelSomnusSignIn, handleSomnusAuthDeepLink, startSomnusSignIn } from './somnus-signin'
+import { cancelSomnusSignIn, handleSomnusAuthDeepLink, reopenSomnusSignIn, startSomnusSignIn } from './somnus-signin'
 import { checkSomnusUpdateNow, installSomnusUpdateNow, startSomnusAutoUpdate } from './somnus-updater'
 import { createBootstrapCoordinator, sshConfigFingerprint } from './ssh-bootstrap-coordinator'
 import { collectSshConfigHosts, parseSshGOutput } from './ssh-config'
@@ -17963,7 +17963,17 @@ ipcMain.on('hermes:devtools:disable-f12', (_event, on) => {
   }
 })
 
-ipcMain.handle('somnus:sign-in:start', () => startSomnusSignIn(url => shell.openExternal(url)))
+ipcMain.handle('somnus:sign-in:start', event =>
+  startSomnusSignIn(
+    url => shell.openExternal(url),
+    code => {
+      if (!event.sender.isDestroyed()) {
+        event.sender.send('somnus:sign-in-code', code)
+      }
+    }
+  )
+)
+ipcMain.handle('somnus:sign-in:reopen', () => reopenSomnusSignIn(url => shell.openExternal(url)))
 ipcMain.handle('somnus:sign-in:cancel', () => cancelSomnusSignIn())
 ipcMain.handle('somnus:update:get', () => checkSomnusUpdateNow())
 ipcMain.handle('somnus:update:install', () => installSomnusUpdateNow())

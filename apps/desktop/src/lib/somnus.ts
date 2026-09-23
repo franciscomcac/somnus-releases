@@ -2,6 +2,8 @@
 
 export const SOMNUS_GATEWAY_URL = 'https://gateway-production-c837.up.railway.app/v1'
 export const SOMNUS_ACCOUNTS_URL = 'https://accounts-production-3073.up.railway.app'
+// Where "Top up" goes when the balance runs out (the website asks the customer to sign in if needed).
+export const SOMNUS_TOP_UP_URL = `${SOMNUS_ACCOUNTS_URL}/dashboard#buy`
 
 // First available model wins as the default after a customer connects. Cheap,
 // fast models first: agent turns send large prompts, so the default decides most

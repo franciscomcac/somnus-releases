@@ -404,7 +404,7 @@ const NON_CONFIG_SETTINGS: ReadonlyArray<{
 }> = [
   {
     icon: Zap,
-    keywords: ['accounts', 'sign in', 'oauth', 'login', 'subscription', 'models', 'anthropic', 'openai'],
+    keywords: ['somnus', 'account', 'accounts', 'sign in', 'sign out', 'log out', 'logout', 'login', 'balance', 'credit', 'top up', 'models'],
     labelKey: 'providerAccounts',
     tab: 'providers&pview=accounts'
   },

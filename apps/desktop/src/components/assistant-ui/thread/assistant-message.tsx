@@ -1,4 +1,3 @@
-import { SOMNUS_ALLOW_NOUS_DIAGNOSTICS } from '@/lib/somnus'
 import {
   ActionBarPrimitive,
   BranchPickerPrimitive,
@@ -49,6 +48,7 @@ import {
   scheduledRetryDelayMs
 } from '@/lib/error-surface'
 import { errorCardText } from '@/lib/error-surface-copy'
+import { openExternalLink } from '@/lib/external-link'
 import { triggerHaptic } from '@/lib/haptics'
 import {
   AudioLines,
@@ -59,9 +59,11 @@ import {
   SmilePlusIcon,
   Upload,
   VolumeXIcon,
+  Wallet,
   XIcon
 } from '@/lib/icons'
 import { extractPreviewTargets } from '@/lib/preview-targets'
+import { SOMNUS_ALLOW_NOUS_DIAGNOSTICS, SOMNUS_TOP_UP_URL } from '@/lib/somnus'
 import { markAssistantIdSpoken } from '@/lib/spoken-reply'
 import { useEnterAnimation } from '@/lib/use-enter-animation'
 import { cn } from '@/lib/utils'
@@ -917,6 +919,19 @@ const ErrorRecoveryActions: FC = () => {
         </span>
       )}
       {plan.retry && surface?.resetsAt !== undefined && <ScheduledRetryAction resetsAt={surface.resetsAt} />}
+      {plan.topUp && (
+        <button
+          className="aui-error-action"
+          onClick={() => {
+            triggerHaptic('selection')
+            openExternalLink(SOMNUS_TOP_UP_URL)
+          }}
+          type="button"
+        >
+          <Wallet className="size-3" />
+          {copy.errorTopUp}
+        </button>
+      )}
       {plan.switchProvider && inRouter && <SwitchProviderAction label={copy.errorSwitchProvider} />}
       {localFolders && (
         <button className="aui-error-action" onClick={() => void openLogs()} type="button">

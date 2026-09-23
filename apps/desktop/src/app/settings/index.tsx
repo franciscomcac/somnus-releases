@@ -495,7 +495,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
         subpage={subpage}
       />
     ) : activeView === 'providers' ? (
-      <SomnusAccountSettings />
+      <SomnusAccountSettings onSignedOut={onClose} />
     ) : activeView === 'keys' ? (
       <KeysSettings view={keysView} />
     ) : activeView === 'notifications' ? (

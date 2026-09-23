@@ -662,6 +662,28 @@ export function completeDesktopOnboarding() {
   })
 }
 
+// Somnus: the customer signed out in Settings. The key is already gone from the
+// engine config; show the (blocking) sign-in screen as on a fresh install.
+export function showSomnusSignedOut() {
+  clearPoll()
+  cancelOnboardingFlow()
+  providersRefreshPromise = null
+  writeCachedConfigured(false)
+  writeCachedSkipped(false)
+  $desktopOnboarding.set({
+    configured: false,
+    flow: { status: 'idle' },
+    mode: 'oauth',
+    providers: null,
+    reason: null,
+    requested: true,
+    firstRunSkipped: false,
+    manual: false,
+    localEndpoint: false,
+    freeTierReady: false
+  })
+}
+
 // "I'll choose a provider later" on the first-run picker. Persists the skip so
 // the blocking overlay never re-nags on future launches, and dismisses it now
 // so the user lands in the app. Chat won't work until a provider is connected

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { getGlobalModelOptions } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { Check, ChevronDown, ChevronLeft, KeyRound, Loader2 } from '@/lib/icons'
+import { Check, ChevronDown, ChevronLeft, ExternalLink, KeyRound, Loader2 } from '@/lib/icons'
 import { isSubmitEnter } from '@/lib/ime'
 import { isProviderSetupErrorMessage } from '@/lib/provider-setup-errors'
 import { cn } from '@/lib/utils'
@@ -599,6 +599,7 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
   const [waiting, setWaiting] = useState(false)
+  const [code, setCode] = useState<null | string>(null)
   const [showKeyForm, setShowKeyForm] = useState(false)
   const [error, setError] = useState<null | string>(null)
   const canSave = value.trim().length > 0
@@ -622,9 +623,13 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
     }
 
     setError(null)
+    setCode(null)
     setWaiting(true)
+    const off = window.hermesDesktop.onSomnusSignInCode?.(c => setCode(c.userCode))
     const result = await window.hermesDesktop.somnusSignIn()
+    off?.()
     setWaiting(false)
+    setCode(null)
 
     if (result.ok) {
       await connectKey(result.key)
@@ -642,25 +647,55 @@ export function SomnusKeyPanel({ ctx }: { ctx: OnboardingContext }) {
   }
 
   if (canSignIn && !showKeyForm) {
-    return (
-      <div className="grid gap-3">
-        <p className="text-xs leading-5 text-muted-foreground">{t.onboarding.somnusSignInDesc}</p>
-        {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        {/* Somnus: sign-in only. Keys come from the customer's account, never pasted by hand. */}
-        <div className="flex items-center justify-end gap-3">
-          {waiting ? (
+    // Somnus: sign-in only. Keys come from the customer's account, never pasted by hand.
+    if (waiting) {
+      return (
+        <div className="grid gap-3">
+          <div className="grid gap-1">
+            <span className="text-[length:var(--conversation-text-font-size)] font-semibold">
+              {t.onboarding.somnusSignInWaitingTitle}
+            </span>
+            <p className="text-xs leading-5 text-muted-foreground">
+              {code ? t.onboarding.somnusSignInCodeHint : t.onboarding.somnusSignInWaiting}
+            </p>
+          </div>
+          <div className="flex min-h-14 items-center justify-center rounded-md border border-border/70 bg-muted/40 py-3">
+            {code ? (
+              <span className="select-all font-mono text-2xl font-semibold tracking-[0.18em]">{code}</span>
+            ) : (
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              disabled={!code}
+              onClick={() => void window.hermesDesktop?.somnusReopenSignIn?.()}
+              size="sm"
+              variant="ghost"
+            >
+              <ExternalLink />
+              {t.onboarding.somnusSignInReopen}
+            </Button>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{t.onboarding.somnusSignInWaiting}</span>
+              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
               <Button onClick={cancel} size="sm" variant="ghost">
                 {t.common.cancel}
               </Button>
             </div>
-          ) : (
-            <Button disabled={saving} onClick={() => void signIn()}>
-              {saving ? <Loader2 className="animate-spin" /> : <KeyRound />}
-              {saving ? t.onboarding.connecting : t.onboarding.somnusSignIn}
-            </Button>
-          )}
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="grid gap-3">
+        <p className="text-xs leading-5 text-muted-foreground">{t.onboarding.somnusSignInDesc}</p>
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        <div className="flex items-center justify-end gap-3">
+          <Button disabled={saving} onClick={() => void signIn()}>
+            {saving ? <Loader2 className="animate-spin" /> : <KeyRound />}
+            {saving ? t.onboarding.connecting : t.onboarding.somnusSignIn}
+          </Button>
         </div>
       </div>
     )

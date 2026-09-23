@@ -32,7 +32,6 @@
  *     no UI consumes them yet)
  */
 
-import { SOMNUS_RELEASES_RAW_BASE } from './somnus-brand'
 import { execFileSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
@@ -43,6 +42,7 @@ import path from 'node:path'
 // with no tsconfig path resolution (see scripts/bundle-electron-main.mjs).
 import { stripAnsi } from '../../shared/src/ansi'
 
+import { SOMNUS_RELEASES_RAW_BASE } from './somnus-brand'
 import { hiddenWindowsChildOptions } from './windows-child-options'
 
 const IS_WINDOWS = process.platform === 'win32'

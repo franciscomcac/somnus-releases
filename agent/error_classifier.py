@@ -109,6 +109,9 @@ _BILLING_PATTERNS = (
     # OpenRouter org-level monthly cap arrives as 403 "Budget limit exceeded (monthly limit)" (#107166):
     # account exhaustion, not a credential problem.
     "budget limit exceeded",
+    # LiteLLM virtual-key budget (Somnus gateway): "Budget has been exceeded! Key=... Max budget: 1.0",
+    # sent as 400 or 429 with type ``budget_exceeded``. The customer's credit is gone: top up.
+    "budget has been exceeded", "budget_exceeded",
     *_FREE_TIER_REFUSAL_PATTERNS,
     # LiteLLM proxies word a hard cap as "hard billing limit" (structured twin:
     # ``terminal_quota_exhausted`` in _BILLING_ERROR_CODES). "terminal billing
@@ -138,6 +141,8 @@ _BILLING_ERROR_CODES = frozenset({
     "organization_usage_limit_exceeded", "project_spend_limit_exceeded",
     # Nous paid model behind an empty credit balance arrives as a 404 (#115702).
     "insufficient_credits_for_paid_model",
+    # LiteLLM virtual-key / user / team budget cap (Somnus gateway top-ups).
+    "budget_exceeded",
 })
 
 # Transient rate limiting. Bedrock "Throttling error: Too many tokens" also

@@ -7,6 +7,8 @@
 // Advisory contract: older backends never send this — every consumer must
 // keep working when it is absent (legacy string-sniffing stays as fallback).
 
+import { somnusAccountOnly } from './somnus'
+
 export const ERROR_SURFACE_LAYERS = [
   'provider',
   'endpoint',
@@ -253,6 +255,8 @@ export interface ErrorRecoveryPlan {
    *  model.switch); Settings → Models deep link fallback when no chat surface
    *  is on screen. */
   switchProvider: boolean
+  /** Somnus: open the top-up page (the customer's Somnus credit ran out). */
+  topUp: boolean
 }
 
 // Layers where the fix is provider/endpoint/auth config, not a retry.
@@ -290,10 +294,17 @@ export function errorRecoveryPlan(surface: ErrorSurface | null | undefined): Err
     signInFreeTier: isFreeTierSurface(surface),
     startNewSession: false,
     switchProvider: surface != null && SWITCH_PROVIDER_LAYERS.includes(surface.layer),
+    topUp: false,
     updateApiKey: apiKeyRejected
   }
 
   const key = errorCardKey(surface)
+
+  // Somnus: an empty balance is fixed by topping up (never by switching
+  // provider). Retry stays so the customer can resend right after paying.
+  if (somnusAccountOnly() && 'code' in key && key.code === 'billing') {
+    return { ...base, retry: true, switchProvider: false, topUp: true }
+  }
 
   return { ...base, ...('code' in key ? CODE_PLANS[key.code] : undefined) }
 }

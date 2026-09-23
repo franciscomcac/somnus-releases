@@ -1,9 +1,9 @@
-import { SOMNUS_ALLOW_NOUS_DIAGNOSTICS } from '@/lib/somnus'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/ui/error-state'
 import { useI18n } from '@/i18n'
+import { SOMNUS_ALLOW_NOUS_DIAGNOSTICS } from '@/lib/somnus'
 import { requestSendDiagnostics } from '@/store/send-diagnostics'
 
 export interface ErrorBoundaryFallbackProps {
