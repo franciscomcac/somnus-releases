@@ -257,6 +257,8 @@ export interface ErrorRecoveryPlan {
   switchProvider: boolean
   /** Somnus: open the top-up page (the customer's Somnus credit ran out). */
   topUp: boolean
+  /** Somnus: the saved sign-in no longer works; show the Somnus sign-in screen. */
+  signInSomnus: boolean
 }
 
 // Layers where the fix is provider/endpoint/auth config, not a retry.
@@ -295,6 +297,7 @@ export function errorRecoveryPlan(surface: ErrorSurface | null | undefined): Err
     startNewSession: false,
     switchProvider: surface != null && SWITCH_PROVIDER_LAYERS.includes(surface.layer),
     topUp: false,
+    signInSomnus: false,
     updateApiKey: apiKeyRejected
   }
 
@@ -302,6 +305,10 @@ export function errorRecoveryPlan(surface: ErrorSurface | null | undefined): Err
 
   // Somnus: an empty balance is fixed by topping up (never by switching
   // provider). Retry stays so the customer can resend right after paying.
+  if (somnusAccountOnly() && surface?.layer === 'auth') {
+    return { ...base, retry: false, signInAgain: false, signInSomnus: true, switchProvider: false, updateApiKey: false }
+  }
+
   if (somnusAccountOnly() && 'code' in key && key.code === 'billing') {
     return { ...base, retry: true, switchProvider: false, topUp: true }
   }

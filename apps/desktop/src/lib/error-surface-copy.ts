@@ -35,6 +35,10 @@ export function errorCardText(
 ): ErrorCardText {
   const provider = errorProviderName(thread, surface)
 
+  if (somnusAccountOnly() && surface?.layer === 'auth') {
+    return { body: thread.somnusSignInExpired.body, title: thread.somnusSignInExpired.title }
+  }
+
   // A credential rejection is worded by HOW the provider is credentialed
   // (key vs sign-in), which the code alone (`auth`) cannot tell.
   if (surface?.layer === 'auth' && surface.authKind === 'oauth') {

@@ -664,7 +664,7 @@ export function completeDesktopOnboarding() {
 
 // Somnus: the customer signed out in Settings. The key is already gone from the
 // engine config; show the (blocking) sign-in screen as on a fresh install.
-export function showSomnusSignedOut() {
+export function showSomnusSignedOut(reason: null | string = null) {
   clearPoll()
   cancelOnboardingFlow()
   providersRefreshPromise = null
@@ -675,7 +675,7 @@ export function showSomnusSignedOut() {
     flow: { status: 'idle' },
     mode: 'oauth',
     providers: null,
-    reason: null,
+    reason,
     requested: true,
     firstRunSkipped: false,
     manual: false,

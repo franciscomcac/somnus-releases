@@ -4559,6 +4559,11 @@ export const en: Translations = {
       errorStartNewSession: 'Start new session',
       errorSwitchProvider: 'Switch provider',
       errorTopUp: 'Top up',
+      somnusSignInExpired: {
+        title: 'Sign in to Somnus again',
+        body: 'Your Somnus sign-in is no longer valid (for example, the key was regenerated on the website). Sign in again, then resend your message.'
+      },
+      errorSomnusSignIn: 'Sign in again',
       somnusOutOfCredit: {
         title: 'You\'re out of Somnus credit',
         body: 'Your message wasn\'t sent. Top up your balance, then press Retry to continue.'

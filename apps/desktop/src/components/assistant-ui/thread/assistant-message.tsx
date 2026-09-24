@@ -12,6 +12,7 @@ import { useStore } from '@nanostores/react'
 import { type FC, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useInRouterContext, useNavigate } from 'react-router'
 
+import { signOutOfSomnus } from '@/api/somnus'
 import { requestModelMenuToggle } from '@/app/chat/composer/focus'
 import { useComposerScope } from '@/app/chat/composer/scope'
 import { useSessionView } from '@/app/chat/session-view'
@@ -36,7 +37,7 @@ import { formatElapsed } from '@/components/chat/activity-timer'
 import { PreviewAttachment } from '@/components/chat/preview-attachment'
 import { Codicon } from '@/components/ui/codicon'
 import { CopyButton } from '@/components/ui/copy-button'
-import { useI18n } from '@/i18n'
+import { translateNow, useI18n } from '@/i18n'
 import {
   errorRecoveryPlan,
   type ErrorSurface,
@@ -70,7 +71,7 @@ import { cn } from '@/lib/utils'
 import { playSpeechText, stopVoicePlayback } from '@/lib/voice-playback'
 import { openFreeTierSignIn } from '@/store/free-tier-sign-in'
 import { notifyError } from '@/store/notifications'
-import { startManualProviderOAuth } from '@/store/onboarding'
+import { showSomnusSignedOut, startManualProviderOAuth } from '@/store/onboarding'
 import { $activeGatewayProfile, normalizeProfileKey, requestFreshSession } from '@/store/profile'
 import { sessionApprovalRequest } from '@/store/prompts'
 import { requestSendDiagnostics } from '@/store/send-diagnostics'
@@ -919,6 +920,21 @@ const ErrorRecoveryActions: FC = () => {
         </span>
       )}
       {plan.retry && surface?.resetsAt !== undefined && <ScheduledRetryAction resetsAt={surface.resetsAt} />}
+      {plan.signInSomnus && (
+        <button
+          className="aui-error-action"
+          onClick={() => {
+            triggerHaptic('selection')
+            void signOutOfSomnus()
+              .catch(() => undefined)
+              .then(() => showSomnusSignedOut(translateNow('onboarding.somnusAccountExpired')))
+          }}
+          type="button"
+        >
+          <KeyRound className="size-3" />
+          {copy.errorSomnusSignIn}
+        </button>
+      )}
       {plan.topUp && (
         <button
           className="aui-error-action"

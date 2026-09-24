@@ -3840,6 +3840,8 @@ export interface Translations {
       errorSwitchProvider: string
       errorTopUp: string
       somnusOutOfCredit: { title: string; body: string }
+      somnusSignInExpired: { title: string; body: string }
+      errorSomnusSignIn: string
       errorChooseModel: string
       errorCompressConversation: string
       errorCompressFailed: string

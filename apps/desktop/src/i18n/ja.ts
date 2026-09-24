@@ -3466,6 +3466,11 @@ export const ja = defineLocale({
       errorStartNewSession: '新しいセッションを開始',
       errorSwitchProvider: 'プロバイダーを切り替え',
       errorTopUp: 'チャージ',
+      somnusSignInExpired: {
+        title: 'Somnus に再度サインインしてください',
+        body: 'Somnus のサインインが無効になりました（ウェブサイトでキーが再生成された場合など）。再度サインインしてから、メッセージをもう一度送信してください。'
+      },
+      errorSomnusSignIn: '再度サインイン',
       somnusOutOfCredit: {
         title: 'Somnus のクレジットがなくなりました',
         body: 'メッセージは送信されていません。残高をチャージしてから「再試行」を押してください。'

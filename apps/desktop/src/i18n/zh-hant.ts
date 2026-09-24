@@ -3415,6 +3415,11 @@ export const zhHant = defineLocale({
       errorStartNewSession: '開始新工作階段',
       errorSwitchProvider: '切換服務商',
       errorTopUp: '儲值',
+      somnusSignInExpired: {
+        title: '請重新登入 Somnus',
+        body: '你的 Somnus 登入已失效（例如在網站上重新產生了金鑰）。請重新登入，然後再次傳送訊息。'
+      },
+      errorSomnusSignIn: '重新登入',
       somnusOutOfCredit: {
         title: 'Somnus 餘額已用完',
         body: '訊息未送出。請儲值後點選「重試」繼續。'

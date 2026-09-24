@@ -3000,6 +3000,11 @@ export const ar = defineLocale({
       errorStartNewSession: 'بدء جلسة جديدة',
       errorSwitchProvider: 'تبديل المزوّد',
       errorTopUp: 'اشحن الرصيد',
+      somnusSignInExpired: {
+        title: 'سجّل الدخول إلى Somnus مرة أخرى',
+        body: 'لم يعد تسجيل دخولك إلى Somnus صالحًا (مثلًا إذا أُعيد إنشاء المفتاح على الموقع). سجّل الدخول مرة أخرى ثم أعد إرسال رسالتك.'
+      },
+      errorSomnusSignIn: 'سجّل الدخول مرة أخرى',
       somnusOutOfCredit: {
         title: 'نفد رصيد Somnus',
         body: 'لم تُرسل رسالتك. اشحن رصيدك ثم اضغط «إعادة المحاولة» للمتابعة.'

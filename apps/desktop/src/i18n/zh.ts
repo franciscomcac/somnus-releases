@@ -4203,6 +4203,11 @@ export const zh = defineLocale({
       errorStartNewSession: '开始新会话',
       errorSwitchProvider: '切换服务商',
       errorTopUp: '充值',
+      somnusSignInExpired: {
+        title: '请重新登录 Somnus',
+        body: '你的 Somnus 登录已失效（例如在网站上重新生成了密钥）。请重新登录，然后再次发送消息。'
+      },
+      errorSomnusSignIn: '重新登录',
       somnusOutOfCredit: {
         title: 'Somnus 余额已用完',
         body: '消息未发送。请充值后点击“重试”继续。'
