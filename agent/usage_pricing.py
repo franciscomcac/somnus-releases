@@ -160,9 +160,14 @@ _SNAPSHOTS: tuple[tuple[str, Optional[str], str, dict], ...] = (
         "gpt-5.6-sol": ("5.00", "30.00", "0.50", "6.25"), "gpt-5.6-terra": ("2.50", "15.00", "0.25", "3.125"),
         "gpt-5.6-luna": ("1.00", "6.00", "0.10", "1.25"),
     }),
-    # Claude 4.5/4.6/4.7/4.8 Opus share $5/$25 (new tokenizer, up to 35% more tokens).
+    # Claude Opus 5.5 lists at $4/$20 ($0.20 cache read, $5 cache write) — the rates the
+    # Somnus gateway bills, so the in-app cost estimate matches the bill.
+    ("anthropic", _ANTHROPIC_URL, "anthropic-pricing-2026-09", {
+        ("claude-opus-5.5", "claude-opus-5-5"): ("4.00", "20.00", "0.20", "5.00"),
+    }),
+    # Claude 4.5/4.6/4.7/4.8/5 Opus share $5/$25 (new tokenizer, up to 35% more tokens).
     ("anthropic", _ANTHROPIC_URL, "anthropic-pricing-2026-05", {
-        ("claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-7-20250507", "claude-opus-4-6",
+        ("claude-opus-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-7-20250507", "claude-opus-4-6",
          "claude-opus-4-6-20250414", "claude-opus-4-5"): _OPUS,
         ("claude-sonnet-4-6", "claude-sonnet-4-6-20250414", "claude-sonnet-4-5", "claude-sonnet-4-20250514",
          "claude-3-5-sonnet-20241022"): _SONNET,

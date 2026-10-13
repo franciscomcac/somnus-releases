@@ -390,7 +390,12 @@ TASK_COMPLETION_GUIDANCE = (
     "If a tool, install, or network call fails and blocks the real path, say so directly and try an alternative "
     "(different package manager, different approach, ask the user). NEVER substitute plausible-looking fabricated "
     "output (made-up data, invented file contents, synthesised API responses) for results you couldn't actually "
-    "produce. Reporting a blocker honestly is always better than inventing a result."
+    "produce. Reporting a blocker honestly is always better than inventing a result.\n"
+    # Somnus: the user pays per token, and every tool result is re-sent on each later call of the task.
+    "Every tool result stays in context for the rest of the task: find code with search_files, then read the line "
+    "ranges you need rather than whole large files; keep command output short (head, --stat, counts). Report "
+    "progress in your reply — don't write status, progress or plan files unless the user asks for one. Don't open "
+    ".env or other secret-bearing files unless the user asks."
 )
 
 # Universal parallel-tool-call guidance (ALL models): the runtime already executes independent calls

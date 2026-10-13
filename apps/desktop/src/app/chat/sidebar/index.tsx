@@ -136,13 +136,16 @@ import { $archivedSessions, loadArchivedSessions } from '@/store/sidebar-archive
 import { $sidebarSessionRankIds } from '@/store/sidebar-sort'
 
 import {
+  AGENTS_ROUTE,
   type AppView,
   ARTIFACTS_ROUTE,
   CAPABILITIES_ROUTE,
+  COMMAND_CENTER_ROUTE,
   CRON_ROUTE,
   MESSAGING_ROUTE,
   SIDEBAR_NAV_AREA,
-  type SidebarNavContribution
+  type SidebarNavContribution,
+  STARMAP_ROUTE
 } from '../../routes'
 import type { SidebarNavItem } from '../../types'
 import { type NewSessionSplitHandler, startNewSessionDrag } from '../new-session-drag'
@@ -223,22 +226,42 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     route: MESSAGING_ROUTE,
     keybindActionId: 'nav.messaging'
   },
-  // Artifacts and Scheduled jobs are outputs of running Somnus the developer
-  // way; Capabilities and Messaging are how anyone sets it up.
+  // Somnus: the showcase views are first-class for everyone (Simple mode too),
+  // not palette-only extras — they are what people screenshot and share.
   {
-    id: 'artifacts',
-    label: '',
-    icon: props => <Codicon name="files" {...props} />,
-    route: ARTIFACTS_ROUTE,
-    keybindActionId: 'nav.artifacts',
-    tier: 'advanced'
+    id: 'starmap',
+    label: 'Star map',
+    icon: props => <Codicon name="sparkle" {...props} />,
+    route: STARMAP_ROUTE
+  },
+  {
+    id: 'agents',
+    label: 'Agents',
+    icon: props => <Codicon name="organization" {...props} />,
+    route: AGENTS_ROUTE,
+    keybindActionId: 'nav.agents'
+  },
+  {
+    id: 'command-center',
+    label: 'Command Center',
+    icon: props => <Codicon name="dashboard" {...props} />,
+    route: COMMAND_CENTER_ROUTE,
+    keybindActionId: 'nav.commandCenter'
   },
   {
     id: 'cron',
     label: '',
     icon: props => <Codicon name="watch" {...props} />,
     route: CRON_ROUTE,
-    keybindActionId: 'nav.cron',
+    keybindActionId: 'nav.cron'
+  },
+  // Artifacts are an output of running Somnus the developer way.
+  {
+    id: 'artifacts',
+    label: '',
+    icon: props => <Codicon name="files" {...props} />,
+    route: ARTIFACTS_ROUTE,
+    keybindActionId: 'nav.artifacts',
     tier: 'advanced'
   }
 ]

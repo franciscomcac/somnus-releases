@@ -499,9 +499,10 @@ DEFAULT_CONFIG = {
     # Seconds to wait for a single context file read before skipping it with a warning. Guards startup
     # against network-backed filesystems (iCloud Drive, OneDrive, NFS) that can block a cold read.
     "context_file_read_timeout": 5.0,
-    # Max chars per read_file call; larger reads are rejected with offset+limit guidance. 100K chars
-    # ≈ 25–35K tokens.
-    "file_read_max_chars": 100_000,
+    # Max chars per read_file call; larger reads are trimmed to whole lines with a next_offset
+    # continuation. Somnus: 24K chars ≈ 6K tokens — every char stays in context (and is re-billed)
+    # for the rest of the task, so big files are read in slices.
+    "file_read_max_chars": 24_000,
     # Seconds the first agent build waits for background MCP discovery before snapshotting its tool
     # list. Returns the instant discovery completes (no MCP servers → ~0s); the bound only bites
     # when a server is still connecting. Turn-1 latency knob only: a server that misses it is picked
@@ -525,10 +526,11 @@ DEFAULT_CONFIG = {
         # multi-profile fleets). 0 = unlimited.
         "discovery_concurrency": 4,
     },
-    # Tool-output truncation. max_bytes: terminal_tool output cap in chars (head+tail kept; 50_000 ≈
-    # 12-15K tokens). max_lines: max `limit` one read_file call may request before clamping.
-    # max_line_length: per-line cap in read_file's line-numbered view (chars).
-    "tool_output": {"max_bytes": 50000, "max_lines": 2000, "max_line_length": 2000},
+    # Tool-output truncation. max_bytes: terminal_tool output cap in chars (head+tail kept; Somnus:
+    # 12_000 ≈ 3K tokens). max_lines: max `limit` one read_file call may request before clamping.
+    # max_line_length: per-line cap in read_file's line-numbered view (chars). search_max_chars:
+    # cap on one search_files result; extra matches are dropped with a "narrow your query" hint.
+    "tool_output": {"max_bytes": 12000, "max_lines": 2000, "max_line_length": 2000, "search_max_chars": 12000},
     # Tool loop guardrails nudge models that repeat failed/non-progressing tool calls. Soft warnings
     # are always on; hard stops are opt-in so interactive sessions keep flowing.
     "tool_loop_guardrails": {
@@ -564,10 +566,11 @@ DEFAULT_CONFIG = {
         # above 0.75 to override the floor.
         "threshold": 0.50,
         # threshold_tokens: absolute token cap — compression triggers at the lower of the ratio
-        # threshold and this count. Clamped to the model's context length. 256K bounds 1M-window
-        # models (their 50% trigger sat at 500K, so compaction never fired) while every lower
-        # ratio trigger still wins; null = ratio-only.
-        "threshold_tokens": 256_000,
+        # threshold and this count. Clamped to the model's context length. Somnus: 64K — every token
+        # of history is re-sent (and, through a provider whose prompt cache rarely hits, re-billed at
+        # the cache-write price) on each call, so compaction's one summary call pays for itself fast.
+        # null = ratio-only.
+        "threshold_tokens": 64_000,
         # "progress_notices": False,    # opt-in (#52995): when True, routine compression
         "target_ratio": 0.20,         # fraction of threshold to preserve as recent tail
         # tail_mode: "lean" = clamped 2.5%-of-window tail (10K floor / 25K cap) plus chunked
@@ -589,10 +592,10 @@ DEFAULT_CONFIG = {
         # is re-sent every turn); e.g. 48000 reclaims early. 0 = off. Tail protected by
         # `protect_last_n`. Built-in compressor only. Each committed prune rewrites sent history and
         # breaks the prompt-cache prefix — the min_reclaim gate below keeps those breaks episodic.
-        "proactive_prune_tokens": 0,
+        "proactive_prune_tokens": 24_000,  # Somnus: on (was 0)
         # Prune's summarize pass only touches tool results larger than this (chars); clamped >= 200
         # so a generated summary can't be re-summarized.
-        "proactive_prune_min_result_chars": 8000,
+        "proactive_prune_min_result_chars": 4000,  # Somnus: was 8000
         # A prune only commits when it reclaims at least this many tokens, then waits for a
         # trigger-sized runway to regrow before rearming. 0 = no minimum-savings gate.
         "proactive_prune_min_reclaim_tokens": 4096,
@@ -600,10 +603,10 @@ DEFAULT_CONFIG = {
         # rolling summary, amortizing compression cost. Off by default because every pass rewrites
         # sent history and breaks the prompt-cache prefix EVERY turn; enable only if the amortized
         # stall beats the cached-prefix discount. See website/docs/developer-guide/micro-compaction.md.
-        "micro_compact": False,
+        "micro_compact": True,  # Somnus: on — the cache it would break rarely hits on our provider
         # Cadence: run a pass every Nth completed turn (1 = one cache break per turn, 5 = a fifth of
         # the breaks). Clamped >= 1; ignored unless micro_compact is true.
-        "micro_compact_every_n_turns": 1,
+        "micro_compact_every_n_turns": 3,  # Somnus: was 1
         # Once the rolling summary exceeds this many tokens, the next pass re-summarizes it.
         "micro_compact_defrag_threshold_tokens": 2000,
         # Gateway session-hygiene force-compress threshold, by message count.
@@ -960,8 +963,9 @@ DEFAULT_CONFIG = {
         # Petdex animated mascot (github.com/crafter-station/petdex): cosmetic sprite across
         # CLI/TUI/desktop, managed with `hermes pets`. No effect on prompt caching.
         "pet": {
-            "enabled": False,
-            "slug": "",   # active pet slug in get_hermes_home()/pets/; empty → first installed
+            # Somnus: on by default with the bundled original mascot (agent/pet/bundled/luna).
+            "enabled": True,
+            "slug": "luna",   # active pet slug in get_hermes_home()/pets/; empty → first installed
             # auto (detect kitty/iTerm2/sixel, else unicode half-blocks) | kitty | iterm | sixel |
             # unicode | off
             "render_mode": "auto",
@@ -1330,13 +1334,14 @@ DEFAULT_CONFIG = {
         # When delegate_task narrows child toolsets, keep the parent's enabled MCP toolsets (so
         # toolsets=["web"] doesn't strip MCP). false = strict intersection.
         "inherit_mcp_toolsets": True,
-        # Per-subagent iteration cap (own budget, independent of the parent's).
-        "max_iterations": 250,
+        # Per-subagent iteration cap (own budget, independent of the parent's). Somnus: 80 (was 250)
+        # — a focused child that needs more is usually lost, and every turn re-sends its context.
+        "max_iterations": 80,
         # Hard per-summary char ceiling on subagent results, layered on the dynamic budget (each
         # summary is sized to the parent's remaining context headroom; trimmed text spills to
         # ~/.hermes/cache/delegation/ with a head+tail window + read_file offset footer, nothing
         # lost). 0 disables the ceiling; the dynamic budget still applies.
-        "max_summary_chars": 24000,
+        "max_summary_chars": 6000,  # Somnus: was 24000
         # Inactivity cap per child (seconds, floor 30) — time with NO progress, not total runtime. 0 = no cap:
         # children fail only from real errors (API, tools, iteration budget). A progressing child (including one
         # waiting on a multi-minute completion) restarts the window; a frozen one is caught.
@@ -1345,8 +1350,9 @@ DEFAULT_CONFIG = {
         # "none" (empty = inherit)
         "reasoning_effort": "",
         # Max parallel children per batch AND max concurrent background delegation units; async
-        # dispatches beyond it run synchronously. Floor 1, no ceiling.
-        "max_concurrent_children": 10,
+        # dispatches beyond it run synchronously. Floor 1, no ceiling. Somnus: 3 (was 10) — each child
+        # carries its own full prompt, so wide fan-outs multiply cost.
+        "max_concurrent_children": 3,
         # Background fan-outs return as ONE message when the whole call finishes. true = each task
         # (or `group`) returns on its own as it finishes — more new turns for the orchestrator.
         "independent_completions": False,
@@ -1983,6 +1989,9 @@ DEFAULT_CONFIG = {
                 "drive_preview", "gui_tour", "desktop_preview", "annotate_preview",
                 "show_tip", "desktop_project", "close_terminal",
                 "apply_layout", "read_terminal", "read_window_below", "focus_pane",
+                # Somnus: rarely used, ~6K chars of schema on every call otherwise.
+                "text_to_speech", "browser_vault_list", "browser_vault_fill", "browser_vault_save_login",
+                "browser_vault_enter_code", "browser_vault_unlock",
             ],
         },
         # Remote connector discovery/lifecycle through the Nous tool gateway.
@@ -2623,7 +2632,7 @@ DEFAULT_CONFIG = {
         # Extra ports detection probes for an external llama-server (besides 8080).
         "detect_ports": [],
     },
-    "_config_version": 45,  # Config schema version - bump this when adding new required fields
+    "_config_version": 47,  # Config schema version - bump this when adding new required fields
 }
 
 

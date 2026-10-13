@@ -1,8 +1,8 @@
 """Configurable tool-output truncation limits (``tool_output`` in config.yaml):
 ``max_bytes`` (terminal output cap), ``max_lines`` (read_file pagination cap),
-``max_line_length`` (per-line cap before '... [truncated]'). Defaults equal the
-constants once hardcoded in terminal_tool / file_operations and the reader never
-raises, so behaviour is unchanged when the section is absent or malformed."""
+``max_line_length`` (per-line cap before '... [truncated]'), ``search_max_chars``
+(cap on one search_files result). The reader never raises; an absent or malformed
+section yields the defaults below."""
 
 from __future__ import annotations
 
@@ -10,9 +10,10 @@ from typing import Any, Dict
 
 from hermes_constants import hermes_home_key
 
-DEFAULT_MAX_BYTES = 50_000       # terminal_tool.MAX_OUTPUT_CHARS
+DEFAULT_MAX_BYTES = 12_000       # terminal_tool.MAX_OUTPUT_CHARS (Somnus: was 50_000)
 DEFAULT_MAX_LINES = 2000         # file_operations.MAX_LINES
 DEFAULT_MAX_LINE_LENGTH = 2000   # file_operations.MAX_LINE_LENGTH
+DEFAULT_SEARCH_MAX_CHARS = 12_000  # one search_files result, serialized
 # Keyed by profile home: the multiplexed gateway serves every profile from one process, so a
 # single slot would hand the launch profile's limits to every other profile.
 _cached_limits: Dict[str, Dict[str, int]] = {}
@@ -32,7 +33,7 @@ def _coerce_positive_int(value: Any, default: int) -> int:
 
 
 def get_tool_output_limits() -> Dict[str, int]:
-    """Resolved ``{max_bytes, max_lines, max_line_length}``; never raises. Cached per profile
+    """Resolved ``{max_bytes, max_lines, max_line_length, search_max_chars}``; never raises. Cached per profile
     home for the process — ``_reset_tool_output_limits_cache()`` forces a fresh read."""
     key = hermes_home_key()
     cached = _cached_limits.get(key)
@@ -50,7 +51,9 @@ def get_tool_output_limits() -> Dict[str, int]:
         "max_bytes": _coerce_positive_int(section.get("max_bytes"), DEFAULT_MAX_BYTES),
         "max_lines": _coerce_positive_int(section.get("max_lines"), DEFAULT_MAX_LINES),
         "max_line_length": _coerce_positive_int(
-            section.get("max_line_length"), DEFAULT_MAX_LINE_LENGTH)}
+            section.get("max_line_length"), DEFAULT_MAX_LINE_LENGTH),
+        "search_max_chars": _coerce_positive_int(
+            section.get("search_max_chars"), DEFAULT_SEARCH_MAX_CHARS)}
     return limits
 
 
@@ -62,3 +65,4 @@ def _reset_tool_output_limits_cache() -> None:
 def get_max_bytes() -> int: return get_tool_output_limits()["max_bytes"]
 def get_max_lines() -> int: return get_tool_output_limits()["max_lines"]
 def get_max_line_length() -> int: return get_tool_output_limits()["max_line_length"]
+def get_search_max_chars() -> int: return get_tool_output_limits()["search_max_chars"]

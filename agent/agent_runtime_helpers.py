@@ -1541,7 +1541,7 @@ def _is_litellm_route(provider_lower: str, base_url: str) -> bool:
     )
 
 
-_SOMNUS_GATEWAY_HOSTS = frozenset({"gateway-production-c837.up.railway.app"})
+from agent.somnus_cost_routing import SOMNUS_GATEWAY_HOSTS as _SOMNUS_GATEWAY_HOSTS
 
 
 def _has_litellm_token(value: str, delimiters: str) -> bool:

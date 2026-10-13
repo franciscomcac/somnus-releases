@@ -532,6 +532,14 @@ def _billing_or_entitlement_message(
             switch,
         ])
 
+    # Somnus: out of Somnus credit — point at the top-up page, never at a third-party provider.
+    from agent.somnus_cost_routing import is_somnus_gateway
+    if is_somnus_gateway(str(base_url or "")):
+        return "\n".join([
+            "You're out of Somnus credit.",
+            "Top up at https://somnus.world/billing, then retry.",
+        ])
+
     # Provider-agnostic billing URL so every text surface shows the same actionable link.
     try:
         from agent.billing_links import build_billing_block

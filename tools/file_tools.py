@@ -45,9 +45,9 @@ logger = logging.getLogger(__name__)
 
 _EXPECTED_WRITE_ERRNOS = {errno.EACCES, errno.EPERM, errno.EROFS}
 
-# Read-size guard. Model-agnostic, so characters proxy tokens: 100K chars is
-# ~25-35K tokens across typical tokenisers. Configurable: file_read_max_chars.
-_DEFAULT_MAX_READ_CHARS = 100_000
+# Read-size guard. Model-agnostic, so characters proxy tokens: 24K chars is
+# ~6-8K tokens across typical tokenisers. Configurable: file_read_max_chars.
+_DEFAULT_MAX_READ_CHARS = 24_000
 def _get_max_read_chars() -> int:
     """Return ``file_read_max_chars`` from config.yaml (default on missing/invalid). No module
     cache: ``load_config_readonly`` is already mtime+path cached, and a process-lifetime slot
@@ -1030,6 +1030,30 @@ def patch_tool(mode: str = "replace", path: str = None, old_string: str = None,
         return tool_error(str(e))
 
 
+def _cap_search_result(result) -> tuple[dict, int, int]:
+    """Serialize *result*, dropping trailing matches/files until it fits ``search_max_chars``.
+
+    Every char of a search result stays in context for the rest of the task, so one broad
+    pattern must not dump tens of thousands of chars. Returns ``(result_dict, dropped, cap)``; the
+    first result is always kept so the model sees the shape of what matched.
+    """
+    from tools.tool_output_limits import get_search_max_chars
+    cap = get_search_max_chars()
+    result_dict = result.to_dict(densify=True)
+    dropped = 0
+    for attr in ("matches", "files"):
+        items = getattr(result, attr, None) or []
+        while len(items) > 1 and len(json.dumps(result_dict, ensure_ascii=False)) > cap:
+            size = len(json.dumps(result_dict, ensure_ascii=False))
+            keep = max(1, min(len(items) - 1, int(len(items) * cap / size * 0.9)))
+            dropped += len(items) - keep
+            items = items[:keep]
+            setattr(result, attr, items)
+            result.truncated = True
+            result_dict = result.to_dict(densify=True)
+    return result_dict, dropped, cap
+
+
 def search_tool(pattern: str, target: str = "content", path: str = ".",
                 file_glob: str = None, limit: int = 50, offset: int = 0,
                 output_mode: str = "content", context: int = 0,
@@ -1088,7 +1112,7 @@ def search_tool(pattern: str, target: str = "content", path: str = ".",
                 m.content = redact_sensitive_text(
                     m.content, file_read=True,
                     secret_file=_is_secret_file_arg(_resolved_match_path(m.path, task_id)))
-        result_dict = result.to_dict(densify=True)
+        result_dict, capped, search_cap = _cap_search_result(result)
 
         if omitted:
             result_dict["_omitted"] = (
@@ -1108,7 +1132,14 @@ def search_tool(pattern: str, target: str = "content", path: str = ".",
         # Structured like ``_warning`` above: text appended after the JSON
         # breaks every json.loads consumer (execute_code RPC, strict tool-message
         # providers) — #90322.
-        if result_dict.get("truncated"):
+        if capped:
+            shown = len(result.matches) or len(result.files)
+            result_dict["_hint"] = (
+                f"Output capped at {search_cap} chars: {capped} more result(s) not shown. "
+                "Narrow the pattern, path or file_glob (or use output_mode='files_only'), "
+                f"or page with offset={offset + shown}."
+            )
+        elif result_dict.get("truncated"):
             result_dict["_hint"] = (
                 f"Results truncated. Use offset={offset + limit} to see more, "
                 "or narrow with a more specific pattern or file_glob."

@@ -4488,6 +4488,11 @@ def _main_route_target(runtime: Dict[str, Any], task: Optional[str]) -> Tuple[st
             logger.debug("Auxiliary task %s: preferring fast model %s over main model %s",
                          task, fast_model, main_model)
             main_model = fast_model
+    # Somnus: compaction summaries on the Somnus gateway run on the cheaper helper model unless the
+    # user pinned auxiliary.compression.model.
+    if task == "compression" and not str(_get_auxiliary_task_config(task).get("model") or "").strip():
+        from agent.somnus_cost_routing import somnus_helper_model
+        main_model = somnus_helper_model(runtime_base_url or _read_main_base_url(), main_model) or main_model
     # MoA virtual provider: the preset name is not a wire model; run aux on the aggregator and drop
     # the facade's "moa://local" base_url / placeholder key so it uses its own credentials.
     if main_provider == "moa":

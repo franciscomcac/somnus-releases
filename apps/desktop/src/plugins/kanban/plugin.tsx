@@ -5,8 +5,8 @@
  * through `ctx.rest` (namespace-scoped to `/api/plugins/kanban`). No new
  * backend, no core edits.
  *
- * Ships OFF by default (`defaultEnabled: false`): it inventories in
- * Capabilities ▸ Plugins and registers nothing until the user flips the switch.
+ * Somnus: ships ON by default (`defaultEnabled: true`) — the board is one of the
+ * headline visuals. Users can still switch it off in Capabilities ▸ Plugins.
  */
 
 import './kanban.css'
@@ -82,7 +82,7 @@ const plugin: HermesPlugin = {
   id: 'kanban',
   name: 'Kanban',
   description: 'Multi-agent task board — board page, sidebar entry, and a live in-flight count in the status bar.',
-  defaultEnabled: false,
+  defaultEnabled: true,
   register(ctx) {
     ctx.i18n.register(KANBAN_LOCALES)
     ctx.onDispose(bindApi(ctx.rest, ctx.storage, ctx.socket, { os: ctx.os, t: ctx.i18n.t }))

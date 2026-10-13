@@ -157,7 +157,7 @@ def _subagent_stop_tool_call_history(tool_trace: Any) -> List[Dict[str, Any]]:
 
 # Hard per-summary character ceiling layered on top of the dynamic headroom budget (see _apply_summary_budget):
 # belt-and-suspenders for models that ignore "be concise". 0 disables the ceiling.
-DEFAULT_MAX_SUMMARY_CHARS = 24000
+DEFAULT_MAX_SUMMARY_CHARS = 6000
 # Fraction of the parent's *remaining* context headroom the whole batch of summaries may consume, split per summary,
 # so N children can't collectively blow the parent's window (the compression/429 death spiral).
 _SUMMARY_HEADROOM_FRACTION = 0.5

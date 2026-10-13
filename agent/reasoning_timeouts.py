@@ -29,7 +29,7 @@ _REASONING_STALE_TIMEOUT_FLOORS: dict[int, tuple[str, ...]] = {
         # variants): minutes-long thinking at xhigh/max/ultra; sub-10k-token requests sit below the
         # Codex context-size floor, so this is their only protection. Anchored so gpt-5.5 and the
         # gpt-4.x / gpt-5.1-chat lines keep the effort-tier defaults (#112909).
-        "gpt-5.6", "gpt-6",
+        "gpt-5.6", "gpt-6", "gpt-5.5",
         # Mythos-class named models (claude-fable-5): 1M ctx + 128K output, a heavier thinking
         # phase than the numbered line — otherwise the stale detector trips the circuit breaker.
         "claude-fable",
@@ -44,7 +44,7 @@ _REASONING_STALE_TIMEOUT_FLOORS: dict[int, tuple[str, ...]] = {
         "ox-alpha", "x-preview-f-free", "inkling",
     ),
     # Anthropic Claude 4.x+ thinking variants (anchored so 3.x never matches).
-    240: ("claude-opus-4", "claude-opus-5"),
+    240: ("claude-opus-4", "claude-opus-5.5", "claude-opus-5"),
     # qwen3 family: instruct variants also match — a slightly longer wait on a hung provider
     # beats a pattern (``qwen3-.*-thinking``) that breaks on the next naming shape.
     180: ("qwen3", "claude-sonnet-5", "claude-sonnet-4.5", "claude-sonnet-4.6", "grok-4-fast-non-reasoning"),

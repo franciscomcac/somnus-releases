@@ -31,7 +31,8 @@ export function setTitlebarAppActionsSide(side: TitlebarAppActionsSide) {
  */
 export const TITLEBAR_FIXED_TOOLS = {
   'flip-panes': { tier: 'advanced' },
-  hud: { tier: 'advanced' },
+  // Somnus: HUD is a headline feature, shown in Simple mode too.
+  hud: {},
   layout: {},
   'right-sidebar': { tier: 'advanced' },
   settings: {},

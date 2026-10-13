@@ -345,14 +345,14 @@ if ($PSBoundParameters.ContainsKey('HermesHome')) {
     $HermesHome = ConvertTo-LongPath $HermesHome
 } else {
     $HermesHome = ConvertTo-LongPath $(
-        if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\hermes" }
+        if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\somnus" }
     )
 }
 if ($PSBoundParameters.ContainsKey('InstallDir')) {
     $InstallDir = ConvertTo-LongPath $InstallDir
 } else {
     $InstallDir = ConvertTo-LongPath $(
-        if ($env:HERMES_HOME) { "$env:HERMES_HOME\hermes-agent" } else { "$env:LOCALAPPDATA\hermes\hermes-agent" }
+        if ($env:HERMES_HOME) { "$env:HERMES_HOME\hermes-agent" } else { "$env:LOCALAPPDATA\somnus\hermes-agent" }
     )
 }
 if ($script:NormalizedProfilePaths) {
@@ -1829,6 +1829,30 @@ function Test-SystemNodeReady {
         Write-Warn "Node.js $version was found, but npm is missing or could not report its version"
     }
     return $false
+}
+
+# Somnus: put the Hermes-managed Node first on this process's PATH when the
+# system Node/npm would fail the engines check. Session-only (never touches
+# the customer's persisted PATH). Returns $true when the managed tree is used.
+function Use-ManagedNodeIfSystemNpmUnfit {
+    $managedDir = Join-Path $HermesHome "node"
+    $managedNode = Join-Path $managedDir "node.exe"
+    if (-not (Test-Path $managedNode)) { return $false }
+
+    $systemOk = $false
+    try { $systemOk = [bool](Test-SystemNodeReady 6>$null 3>$null) } catch { $systemOk = $false }
+    if ($systemOk) { return $false }
+
+    try {
+        if (-not (Test-NodeVersionOk (& $managedNode --version))) { return $false }
+    } catch { return $false }
+
+    $pathParts = $env:Path -split ";"
+    if ($pathParts[0] -ne $managedDir) {
+        $env:Path = "$managedDir;" + (($pathParts | Where-Object { $_ -ne $managedDir }) -join ";")
+    }
+    Write-Info "Using Hermes-managed Node.js for npm (system npm does not satisfy $(Get-NpmRange))"
+    return $true
 }
 
 function Test-Node {
@@ -3560,6 +3584,15 @@ function Install-NodeDeps {
         }
     }
 
+    # Somnus: Stage-Node may have picked the Hermes-managed Node because the
+    # system npm is outside the engines range (e.g. npm 11.12 vs
+    # "<11.10.0 || >=11.17.0"). That choice only lived in Stage-Node's own
+    # process, and every stage re-reads PATH from the registry, so this stage
+    # would silently fall back to the system npm, hit EBADENGINE under the
+    # repo's engine-strict .npmrc, and leave the browser tools uninstalled.
+    # Re-apply the same decision here.
+    Use-ManagedNodeIfSystemNpmUnfit | Out-Null
+
     # npm lifecycle scripts need node.exe on the PATH visible to child
     # cmd.exe processes.  Stage-Node may have run in a prior process, so
     # re-apply here before any npm install (regression #48130).
@@ -3630,6 +3663,10 @@ function Install-NodeDeps {
         $cmdLine = "/d /s /c "" ""$exePath"" $argLine > ""$logPath"" 2>&1 """
         $proc = Start-Process -FilePath $env:ComSpec -ArgumentList $cmdLine `
             -WorkingDirectory $workDir -NoNewWindow -PassThru
+        # Cache the process handle now: without it Windows PowerShell reports
+        # an empty ExitCode once the process exits, which is why failures
+        # surfaced as "npm install failed -- exit code " with no number.
+        $null = $proc.Handle
         $deadline = [DateTime]::UtcNow.AddSeconds($timeoutSec)
         $shown = 0
         function _Drain-NewLines([string]$path, [ref]$count) {
@@ -3676,7 +3713,7 @@ function Install-NodeDeps {
             # via the returned exit code, which is reliable regardless of
             # stderr noise.
             $ErrorActionPreference = "Continue"
-            $code = _Invoke-NativeWithTimeout $npmPath "install --silent" `
+            $code = _Invoke-NativeWithTimeout $npmPath "install --no-audit --no-fund --loglevel=error" `
                 $installDir $logPath $nodeDepsTimeoutSec
             $ErrorActionPreference = $prevEAP
             if ($code -eq 0) {

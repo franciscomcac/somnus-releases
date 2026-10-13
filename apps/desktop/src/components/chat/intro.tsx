@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { capitalize, normalize } from '@/lib/text'
 
 import introCopyJsonl from './intro-copy.jsonl?raw'
+import { ShowcaseTiles } from './showcase-tiles'
 import { Wordmark } from './wordmark'
 
 type IntroCopy = {
@@ -170,6 +171,7 @@ export function Intro({ personality, seed }: IntroProps) {
         <Wordmark className="mb-1" text={WORDMARK} />
 
         <p className="m-0 text-center leading-normal tracking-tight">{copy.body}</p>
+        <ShowcaseTiles />
       </div>
     </div>
   )

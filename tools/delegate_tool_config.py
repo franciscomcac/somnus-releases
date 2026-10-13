@@ -14,7 +14,7 @@ logger = logging.getLogger("tools.delegate_tool")  # log-record parity with the 
 # match hermes_cli.runtime_provider.RUNTIME_PROVIDER_TYPE_CUSTOM.
 _RUNTIME_PROVIDER_CUSTOM = "custom"
 
-_DEFAULT_MAX_CONCURRENT_CHILDREN = 10
+_DEFAULT_MAX_CONCURRENT_CHILDREN = 3
 # One-shot guard: _get_max_concurrent_children() runs on every get_definitions()
 # schema rebuild, so the >10 cost advisory would otherwise log on every turn.
 _HIGH_CONCURRENCY_WARNED = False
@@ -91,7 +91,7 @@ def _get_oneshot_max_children() -> int:
 
 
 def _get_max_concurrent_children() -> int:
-    """delegation.max_concurrent_children > DELEGATION_MAX_CONCURRENT_CHILDREN env > 10.
+    """delegation.max_concurrent_children > DELEGATION_MAX_CONCURRENT_CHILDREN env > 3.
 
     Floor of 1 is the only bound enforced; there is no ceiling.
     """
@@ -428,8 +428,12 @@ def _resolve_delegation_credentials(cfg: dict, parent_agent) -> dict:
         return _direct_endpoint_credentials(values, explicit_request_overrides)
     if not values["provider"]:
         # Pure inherit; explicit request_overrides still merge OVER the parent's.
+        model = values["model"]
+        if model is None:
+            from agent.somnus_cost_routing import somnus_helper_model
+            model = somnus_helper_model(getattr(parent_agent, "base_url", None), getattr(parent_agent, "model", None))
         return _credential_bundle(
-            values["model"], None, None, None, None,
+            model, None, None, None, None,
             _merge_request_overrides(getattr(parent_agent, "request_overrides", None), explicit_request_overrides),
         )
     return _runtime_provider_credentials(values, explicit_request_overrides)

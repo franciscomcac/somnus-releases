@@ -76,6 +76,14 @@ def _discovered_catalog_stale(entry: dict, model_ids: list[str]) -> bool:
     existing = entry.get("models")
     legacy_discovered = isinstance(existing, dict) and existing.get("__discovered_model_catalog__") is True
     entry_discovered = entry.get("models_discovered") is True or legacy_discovered
+    # The Somnus gateway's catalog is ours: customers never curate it, and older installs
+    # saved it without the discovered flag, which froze their picker on the models that
+    # existed at sign-in. Always let a live probe refresh it (and set the flag).
+    from agent.somnus_cost_routing import is_somnus_gateway
+    if is_somnus_gateway(entry.get("base_url") or entry.get("url")):
+        if isinstance(existing, dict):
+            return list(k for k in existing if k != "__discovered_model_catalog__") != model_ids or not entry_discovered
+        return existing != model_ids
     if isinstance(existing, dict):
         return entry_discovered and (legacy_discovered or list(existing) != model_ids)
     if isinstance(existing, list):

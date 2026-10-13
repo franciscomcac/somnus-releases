@@ -14,7 +14,8 @@ export const SOMNUS_DEFAULT_MODELS = [
   'gemini-3.7-flash',
   'gpt-5.6-luna',
   'claude-haiku-4-5',
-  'claude-sonnet-5'
+  'claude-sonnet-5',
+  'claude-opus-5-5'
 ]
 
 export function pickSomnusDefaultModel(available: readonly string[]): string {

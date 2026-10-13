@@ -9,6 +9,7 @@ through ``_bt`` (resolved per call — never import ``tools.browser_tool`` at im
 import os
 import re
 import subprocess
+import tempfile
 import sys
 import time
 from typing import Optional, Tuple
@@ -56,10 +57,26 @@ def _agent_browser_session_cmd(session_name: str, *cmd: str, log_label: str) -> 
         browser_cmd = _install._find_agent_browser()
     except FileNotFoundError:
         return None
+    argv = [*_session._agent_browser_argv(browser_cmd), "--session", session_name, *cmd]
+    # Somnus: capture through temp FILES, not pipes. agent-browser can spawn its long-lived session
+    # daemon from this call; on Windows the daemon inherits the pipe handles, so ``communicate()``
+    # never sees EOF and the 15 s timeout cannot fire (the reader threads block forever). That turned
+    # a fast "profile locked" failure into a 7-minute ``browser_exec`` hang. Files have no EOF wait.
     try:
-        return subprocess.run([*_session._agent_browser_argv(browser_cmd), "--session", session_name, *cmd],
-                              capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
-                              env=_real_profile_daemon_env(), stdin=subprocess.DEVNULL)
+        with tempfile.TemporaryFile() as out_f, tempfile.TemporaryFile() as err_f:
+            proc = subprocess.Popen(argv, stdout=out_f, stderr=err_f, stdin=subprocess.DEVNULL,
+                                    env=_real_profile_daemon_env())
+            try:
+                returncode = proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5)
+                raise
+            out_f.seek(0)
+            err_f.seek(0)
+            stdout = out_f.read().decode("utf-8", errors="replace")
+            stderr = err_f.read().decode("utf-8", errors="replace")
+        return subprocess.CompletedProcess(argv, returncode, stdout, stderr)
     except (subprocess.SubprocessError, OSError) as e:
         _bt.logger.debug("real-profile %s failed: %s", log_label, e)
         return None

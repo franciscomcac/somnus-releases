@@ -117,7 +117,9 @@ def _resolve_child_toolsets(
         inherited_disabled = [name for name in inherited_disabled if name != "delegation"]
         if "delegation" not in child_toolsets:
             child_toolsets.append("delegation")
+    # Text-to-speech is never part of a delegated task unless asked for; its schema is sent on every child call.
+    unrequested = [] if toolsets and "tts" in toolsets else ["tts"]
     child_disabled_toolsets = list(
-        dict.fromkeys(inherited_disabled + _blocked_toolsets_for_role(effective_role) + ["kanban"])
+        dict.fromkeys(inherited_disabled + _blocked_toolsets_for_role(effective_role) + ["kanban"] + unrequested)
     )
     return child_toolsets, child_disabled_toolsets

@@ -60,9 +60,37 @@ def _ensure_dir(path: Path) -> Path:
     return path
 
 
+# Somnus: pets that ship with the app (original art) live next to this module and are copied into
+# the profile's pets dir once. A marker records the seeding, so a user who removes a bundled pet
+# keeps it removed.
+BUNDLED_PETS_DIR = Path(__file__).resolve().parent / "bundled"
+_BUNDLED_MARKER = ".bundled-seeded"
+_seeded_dirs: set[str] = set()
+
+
+def _seed_bundled_pets(directory: Path) -> None:
+    key = str(directory)
+    if key in _seeded_dirs:
+        return
+    _seeded_dirs.add(key)
+    marker = directory / _BUNDLED_MARKER
+    if marker.exists() or not BUNDLED_PETS_DIR.is_dir():
+        return
+    try:
+        for src in sorted(BUNDLED_PETS_DIR.iterdir()):
+            dest = directory / src.name
+            if src.is_dir() and (src / "pet.json").is_file() and not dest.exists():
+                shutil.copytree(src, dest)
+        marker.write_text("1\n", encoding="utf-8")
+    except OSError as exc:  # cosmetic feature: never break the caller
+        logger.debug("could not seed bundled pets into %s: %s", directory, exc)
+
+
 def pets_dir() -> Path:
-    """Return the profile-scoped pets directory (created on demand)."""
-    return _ensure_dir(get_hermes_home() / "pets")
+    """Return the profile-scoped pets directory (created on demand, bundled pets seeded once)."""
+    directory = _ensure_dir(get_hermes_home() / "pets")
+    _seed_bundled_pets(directory)
+    return directory
 
 
 def _thumb_path(slug: str) -> Path:

@@ -86,11 +86,12 @@ def _mark_entitlement_rejected_model(agent, api_error) -> bool:
     re-fails on the primary, announces an unverified "Primary model restored", and oscillates
     forever (#106475).
     """
-    if getattr(api_error, "status_code", None) != 400:
-        return False
-    from agent.error_classifier import CODEX_ACCOUNT_MODEL_ENTITLEMENT_MARKER
-    haystack = str(getattr(api_error, "message", "") or api_error).lower()
-    if CODEX_ACCOUNT_MODEL_ENTITLEMENT_MARKER not in haystack:
+    status_code = getattr(api_error, "status_code", None)
+    from agent.error_classifier import CODEX_ACCOUNT_MODEL_ENTITLEMENT_MARKER, FailoverReason, classify_api_error
+    classified = classify_api_error(api_error)
+    is_entitlement = (status_code == 400 and CODEX_ACCOUNT_MODEL_ENTITLEMENT_MARKER in str(getattr(api_error, "message", "") or api_error).lower())
+    is_model_not_found = (classified.reason == FailoverReason.model_not_found or status_code == 404)
+    if not (is_entitlement or is_model_not_found):
         return False
     provider = str(getattr(agent, "provider", "") or "").strip().lower()
     model = str(getattr(agent, "model", "") or "").strip()
@@ -106,13 +107,12 @@ def _mark_entitlement_rejected_model(agent, api_error) -> bool:
         return True
     rejected.add((provider, model))
     logger.warning(
-        "Model entitlement rejection: this account is not entitled to %s via %s; "
-        "treating it as unavailable for this session",
-        model, provider,
+        "Model rejection (%s): %s via %s is unavailable or unrecognized; treating it as unavailable for this session",
+        classified.reason.value, model, provider,
     )
     agent._buffer_diagnostic_status(
-        f"🚫 This account is not entitled to {model} via {provider}; it will be skipped "
-        "until restart. Switch to an entitled model via /model or `hermes model`."
+        f"🚫 Model {model} via {provider} is unavailable or unrecognized; it will be skipped "
+        "until restart. Switch to a valid model via /model or `hermes model`."
     )
     return True
 

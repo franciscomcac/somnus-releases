@@ -68,7 +68,7 @@ def _normalize_role(r: Optional[str]) -> str:
         return "leaf"
     return r_norm
 
-DEFAULT_MAX_ITERATIONS = 250
+DEFAULT_MAX_ITERATIONS = 80
 _HEARTBEAT_INTERVAL = 30  # seconds between parent activity heartbeats during delegation
 # Stale-heartbeat thresholds (cycles of _HEARTBEAT_INTERVAL with no progress). Progress = iteration, current_tool OR
 # last_activity_ts advancing; an in-flight model wait refreshes last_activity_ts, so slow models are not "idle". Idle
@@ -660,8 +660,9 @@ DELEGATE_TASK_SCHEMA = {
                         ),
                         "context": _p(
                             "string",
-                            "Background THIS child needs: file paths, error messages, constraints. Each child "
-                            "sees only its own context — repeat shared background in every task that needs it.",
+                            "Background THIS child needs: file paths, error messages, constraints, and the exact "
+                            "snippets or line ranges you already read, so the child doesn't re-read them. Each "
+                            "child sees only its own context — repeat shared background in every task that needs it.",
                         ),
                         "output_schema": _p(
                             "object",

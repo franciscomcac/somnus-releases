@@ -611,6 +611,29 @@ def _migrate_to_45(results: Dict[str, Any], quiet: bool) -> None:
 #: configs already AT v12 still get every step below; only configs BELOW 12 are refused by the
 #: floor gate in run_migrations()'s caller. Versions absent here (15, 18-20, 22, 24, 26-28, 30)
 #: only added a schema default that runtime merging supplies without a write.
+def _migrate_to_47(results: Dict[str, Any], quiet: bool) -> None:
+    """Somnus: switch the desktop pet on with the bundled mascot for users who never picked one.
+
+    Only an untouched block (``enabled`` false/unset AND no ``slug``) is rewritten, so anyone who
+    chose a pet, or chose one and then hid it, keeps their choice.
+    """
+    config = read_raw_config()
+    display = config.get("display")
+    if not isinstance(display, dict):
+        return
+    pet = display.get("pet")
+    if not isinstance(pet, dict):
+        return
+    if pet.get("enabled") not in (False, None) or str(pet.get("slug") or "").strip():
+        return
+    pet["enabled"] = True
+    pet["slug"] = "luna"
+    display["pet"] = pet
+    config["display"] = display
+    _commit(config, results, quiet, "display.pet.enabled=true, display.pet.slug=luna",
+            "  ✓ display.pet → Luna, the Somnus moon (turn it off in Settings → Appearance → Pet).")
+
+
 MIGRATIONS: Tuple[Tuple[int, Callable[[Dict[str, Any], bool], None]], ...] = (
     (12, _migrate_to_12),
     (13, _migrate_to_13),
@@ -725,6 +748,35 @@ MIGRATIONS: Tuple[Tuple[int, Callable[[Dict[str, Any], bool], None]], ...] = (
             "skills/.archive/ (recoverable with `hermes curator restore`). Set it back to 90 to keep the old window."))),
     # 44 → 45: saved platform_toolsets lists predate the connections toolset (see _migrate_to_45).
     (45, _migrate_to_45),
+    # 45 → 46 (Somnus): smaller agent context. Customers pay per token and the whole history is
+    # re-sent every call, so compaction fires at 64K instead of 256K and old tool results over
+    # 4K chars are pruned once the context passes 24K. Only the OLD defaults are rewritten.
+    (46, _rewrite_stale_default(
+        section="compression", key="threshold_tokens", old=256000, new=64000,
+        added="compression.threshold_tokens=64000 (was: 256000)",
+        message="  ✓ compression.threshold_tokens 256000→64000 — long tasks are compacted sooner.")),
+    (46, _rewrite_stale_default(
+        section="compression", key="proactive_prune_tokens", old=0, new=24000,
+        added="compression.proactive_prune_tokens=24000 (was: 0)",
+        message="  ✓ compression.proactive_prune_tokens 0→24000 — large old tool results are pruned.")),
+    (46, _rewrite_stale_default(
+        section="compression", key="proactive_prune_min_result_chars", old=8000, new=4000,
+        added="compression.proactive_prune_min_result_chars=4000 (was: 8000)",
+        message="  ✓ compression.proactive_prune_min_result_chars 8000→4000.")),
+    (46, _rewrite_stale_default(
+        section="delegation", key="max_iterations", old=250, new=80,
+        added="delegation.max_iterations=80 (was: 250)",
+        message="  ✓ delegation.max_iterations 250→80 — subagents stop sooner when they are stuck.")),
+    (46, _rewrite_stale_default(
+        section="delegation", key="max_concurrent_children", old=10, new=3,
+        added="delegation.max_concurrent_children=3 (was: 10)",
+        message="  ✓ delegation.max_concurrent_children 10→3.")),
+    (46, _rewrite_stale_default(
+        section="delegation", key="max_summary_chars", old=24000, new=6000,
+        added="delegation.max_summary_chars=6000 (was: 24000)",
+        message="  ✓ delegation.max_summary_chars 24000→6000 — longer subagent reports spill to a file.")),
+    # 46 → 47 (Somnus): the desktop pet is on by default with the bundled mascot.
+    (47, _migrate_to_47),
 )
 
 
@@ -749,3 +801,23 @@ def run_migrations(current_ver: int, results: Dict[str, Any], quiet: bool) -> No
                 logger.warning("%s", warning)
                 if not quiet:
                     print(f"  ⚠ {warning}")
+
+
+def migrate_if_behind() -> bool:
+    """Run the migration ladder quietly when the on-disk config is behind; True when it ran.
+
+    Somnus: the desktop app updates itself without ``hermes update``, which is the only other place
+    migrations run, so the backend applies them at start. A malformed config is left alone.
+    """
+    from hermes_cli.config import check_config_version, migrate_config
+    try:
+        current_ver, latest_ver = check_config_version(raise_on_parse_error=True)
+    except Exception as exc:
+        logger.warning("config version check failed; migrations skipped: %s", exc)
+        return False
+    if current_ver >= latest_ver:
+        return False
+    results = migrate_config(interactive=False, quiet=True)
+    if results.get("config_added"):
+        logger.info("config migrated to v%s: %s", latest_ver, "; ".join(results["config_added"]))
+    return True

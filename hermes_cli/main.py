@@ -2716,6 +2716,9 @@ def cmd_dashboard(args):
     apply_nofile_soft_limit()
 
     _ssh_session_token = _read_ssh_session_token_file(_token_file) if _token_file else None
+    if _headless_backend:
+        from hermes_cli.config_migrations import migrate_if_behind
+        migrate_if_behind()
     _mcp_discovery_after_bind = _dashboard_prepare_runtime(args, _headless_backend)
 
     from hermes_cli.web_server import start_server
