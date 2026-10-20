@@ -260,6 +260,9 @@ DEFAULT_CONFIG = {
         # Model name (any reasonable spelling) -> effort level; overrides agent.reasoning_effort
         # when the current model matches. Edit in config.yaml (no CLI support: dots in keys).
         "reasoning_overrides": {},
+        # Somnus: default thinking depth. "low" keeps greetings and quick questions snappy; pick a
+        # deeper level per chat from the composer. Empty would mean "medium".
+        "reasoning_effort": "low",
         # Preserve assistant `reasoning_content` on history replay. Echo families (DeepSeek,
         # Kimi/Moonshot, Xiaomi MiMo) are auto-detected by provider name/base-URL host; custom
         # providers and OpenAI-compatible gateways proxying them are not. Set `reasoning_echo: true`
@@ -963,8 +966,9 @@ DEFAULT_CONFIG = {
         # Petdex animated mascot (github.com/crafter-station/petdex): cosmetic sprite across
         # CLI/TUI/desktop, managed with `hermes pets`. No effect on prompt caching.
         "pet": {
-            # Somnus: on by default with the bundled original mascot (agent/pet/bundled/luna).
-            "enabled": True,
+            # Somnus: off by default. The bundled mascot (agent/pet/bundled/luna) stays installed
+            # and can be switched on in Settings > Appearance > Pet.
+            "enabled": False,
             "slug": "luna",   # active pet slug in get_hermes_home()/pets/; empty → first installed
             # auto (detect kitty/iTerm2/sixel, else unicode half-blocks) | kitty | iterm | sixel |
             # unicode | off
@@ -2632,7 +2636,7 @@ DEFAULT_CONFIG = {
         # Extra ports detection probes for an external llama-server (besides 8080).
         "detect_ports": [],
     },
-    "_config_version": 47,  # Config schema version - bump this when adding new required fields
+    "_config_version": 49,  # Config schema version - bump this when adding new required fields
 }
 
 

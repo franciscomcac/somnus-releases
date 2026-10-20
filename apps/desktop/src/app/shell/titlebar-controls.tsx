@@ -27,6 +27,7 @@ import {
 } from '@/store/layout'
 import { $unreadSessionCount } from '@/store/session-dot-state'
 import { $titlebarAppActionsSide, TITLEBAR_FIXED_TOOLS } from '@/store/titlebar-app-actions'
+import { useTheme } from '@/themes/context'
 
 import { appViewForPath, hidesFixedTitlebarClusters, isOverlayView } from '../routes'
 
@@ -144,6 +145,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   const unreadCount = useStore($unreadSessionCount)
   const appActionsSide = useStore($titlebarAppActionsSide)
   const interfaceMode = useStore($interfaceMode)
+  const { resolvedMode, setMode } = useTheme()
   const unreadBadge = unreadCount > 0 ? unreadCount : undefined
   const unreadHint = unreadBadge ? ` · ${t.titlebar.unreadSessions(unreadBadge)}` : ''
   // One filter for every cluster: a tool's own `hidden`, then the mode's tier.
@@ -209,6 +211,17 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   // Static system tools — always pinned to the screen's right edge so the
   // left titlebar stays free for tabs (#107351).
   const systemTools: TitlebarTool[] = [
+    {
+      // Somnus: light/dark in one click (System stays in Settings > Appearance).
+      ...TITLEBAR_FIXED_TOOLS.theme,
+      icon: <TitlebarIcon name="color-mode" />,
+      id: 'theme',
+      label: resolvedMode === 'dark' ? (t.titlebar.lightMode ?? 'Light mode') : (t.titlebar.darkMode ?? 'Dark mode'),
+      onSelect: () => {
+        triggerHaptic('tap')
+        setMode(resolvedMode === 'dark' ? 'light' : 'dark')
+      }
+    },
     {
       ...TITLEBAR_FIXED_TOOLS.settings,
       actionId: 'nav.settings',

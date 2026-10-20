@@ -1,5 +1,7 @@
 const PROVIDER_SETUP_ERROR_RE =
-  /No (?:inference|Somnus) provider(?: is)? configured|no_provider_configured|set an API key/i
+  // Somnus: the backend's own wording ("Somnus is not connected to any AI provider yet") is
+  // a setup state, not an error — the sign-in panel already says what to do.
+  /No (?:inference|Somnus) provider(?: is)? configured|no_provider_configured|set an API key|not connected to any AI provider/i
 
 const SESSION_INFO_CREDENTIAL_WARNING_RE = /^No API key configured for provider '[^']*'\. First message will fail\.$/
 

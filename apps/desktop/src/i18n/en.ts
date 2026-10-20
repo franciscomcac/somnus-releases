@@ -593,6 +593,8 @@ export const en: Translations = {
   },
 
   titlebar: {
+    lightMode: 'Light mode',
+    darkMode: 'Dark mode',
     hideSidebar: 'Hide sidebar',
     showSidebar: 'Show sidebar',
     search: 'Search',
@@ -3764,6 +3766,7 @@ export const en: Translations = {
 
   onboarding: {
     headerTitle: "Let's get you setup with Somnus",
+    appearanceChoice: 'Appearance',
     headerDesc: 'Sign in with your Somnus account to start chatting.',
     somnusKeyTitle: 'Paste your Somnus key',
     somnusKeyDesc: 'Your key connects Somnus to every model. You\'ll find it in your Somnus account.',

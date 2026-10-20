@@ -8,20 +8,20 @@ import {
 } from './titlebar-app-actions'
 
 describe('titlebarAppActionsClusterCounts', () => {
-  it('puts the three app actions on the right by default', () => {
-    expect(titlebarAppActionsClusterCounts('right')).toEqual({ left: 1, right: 5 })
-    expect(titlebarAppActionsClusterCounts('left')).toEqual({ left: 4, right: 2 })
+  it('puts the four app actions (theme, settings, layout, HUD) on the right by default', () => {
+    expect(titlebarAppActionsClusterCounts('right')).toEqual({ left: 1, right: 6 })
+    expect(titlebarAppActionsClusterCounts('left')).toEqual({ left: 5, right: 2 })
   })
 
   it('adds extras to the cluster they belong to', () => {
-    expect(titlebarAppActionsClusterCounts('right', 1, 2)).toEqual({ left: 2, right: 7 })
-    expect(titlebarAppActionsClusterCounts('left', 1, 2)).toEqual({ left: 5, right: 4 })
+    expect(titlebarAppActionsClusterCounts('right', 1, 2)).toEqual({ left: 2, right: 8 })
+    expect(titlebarAppActionsClusterCounts('left', 1, 2)).toEqual({ left: 6, right: 4 })
   })
 
   it('releases the space of every tool Simple mode hides, on both sides', () => {
-    // Sidebar toggle + what Simple keeps of the app actions (Somnus keeps HUD); nothing fixed on the right.
-    expect(titlebarAppActionsClusterCounts('right', 0, 0, 'simple')).toEqual({ left: 1, right: 3 })
-    expect(titlebarAppActionsClusterCounts('left', 0, 0, 'simple')).toEqual({ left: 4, right: 0 })
+    // Sidebar toggle + what Simple keeps of the app actions (Somnus keeps HUD and the theme switch); nothing fixed on the right.
+    expect(titlebarAppActionsClusterCounts('right', 0, 0, 'simple')).toEqual({ left: 1, right: 4 })
+    expect(titlebarAppActionsClusterCounts('left', 0, 0, 'simple')).toEqual({ left: 5, right: 0 })
   })
 })
 

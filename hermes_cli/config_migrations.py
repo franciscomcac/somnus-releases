@@ -634,6 +634,46 @@ def _migrate_to_47(results: Dict[str, Any], quiet: bool) -> None:
             "  ✓ display.pet → Luna, the Somnus moon (turn it off in Settings → Appearance → Pet).")
 
 
+def _migrate_to_48(results: Dict[str, Any], quiet: bool) -> None:
+    """Somnus: turn the desktop pet back off for everyone migration 47 switched on.
+
+    Only the block 47 wrote (``enabled`` true with ``slug`` luna) is touched; the slug stays,
+    so switching the pet on again in Settings brings Luna straight back.
+    """
+    config = read_raw_config()
+    display = config.get("display")
+    if not isinstance(display, dict):
+        return
+    pet = display.get("pet")
+    if not isinstance(pet, dict):
+        return
+    if pet.get("enabled") is not True or str(pet.get("slug") or "").strip() != "luna":
+        return
+    pet["enabled"] = False
+    display["pet"] = pet
+    config["display"] = display
+    _commit(config, results, quiet, "display.pet.enabled=false",
+            "  ✓ display.pet off (turn it on in Settings → Appearance → Pet).")
+
+def _migrate_to_49(results: Dict[str, Any], quiet: bool) -> None:
+    """Somnus: default thinking depth "low" for anyone who never picked one.
+
+    An explicitly empty ``agent.reasoning_effort`` meant "medium" and would shadow the new default;
+    a missing key already gets the default, and a value the user chose is left alone.
+    """
+    config = read_raw_config()
+    agent = config.get("agent")
+    # Key absent: the schema default ("low") already applies at runtime, nothing to write.
+    if not isinstance(agent, dict) or "reasoning_effort" not in agent:
+        return
+    current = agent.get("reasoning_effort")
+    if current not in ("", None):
+        return
+    agent["reasoning_effort"] = "low"
+    config["agent"] = agent
+    _commit(config, results, quiet, "agent.reasoning_effort=low",
+            "  ✓ agent.reasoning_effort → low (faster replies; pick a deeper level per chat).")
+
 MIGRATIONS: Tuple[Tuple[int, Callable[[Dict[str, Any], bool], None]], ...] = (
     (12, _migrate_to_12),
     (13, _migrate_to_13),
@@ -777,6 +817,10 @@ MIGRATIONS: Tuple[Tuple[int, Callable[[Dict[str, Any], bool], None]], ...] = (
         message="  ✓ delegation.max_summary_chars 24000→6000 — longer subagent reports spill to a file.")),
     # 46 → 47 (Somnus): the desktop pet is on by default with the bundled mascot.
     (47, _migrate_to_47),
+    # 47 → 48 (Somnus): the pet is off again by default.
+    (48, _migrate_to_48),
+    # 48 → 49 (Somnus): default thinking depth low.
+    (49, _migrate_to_49),
 )
 
 

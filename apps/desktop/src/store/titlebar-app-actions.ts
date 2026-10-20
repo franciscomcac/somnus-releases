@@ -36,13 +36,15 @@ export const TITLEBAR_FIXED_TOOLS = {
   layout: {},
   'right-sidebar': { tier: 'advanced' },
   settings: {},
-  sidebar: {}
+  sidebar: {},
+  // Somnus: one-click light/dark switch, for everyone.
+  theme: {}
 } satisfies Record<string, Tiered>
 
 export type TitlebarFixedToolId = keyof typeof TITLEBAR_FIXED_TOOLS
 
 /** The app actions that follow `side`; the sidebar toggle is always left, flip and the right-sidebar toggle always right. */
-const APP_ACTION_IDS: readonly TitlebarFixedToolId[] = ['settings', 'layout', 'hud']
+const APP_ACTION_IDS: readonly TitlebarFixedToolId[] = ['theme', 'settings', 'layout', 'hud']
 const RIGHT_FIXED_IDS: readonly TitlebarFixedToolId[] = ['flip-panes', 'right-sidebar']
 
 /** Button counts for the two titlebar clusters, for the mode that is rendering them. */

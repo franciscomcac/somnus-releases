@@ -41,6 +41,7 @@ import {
 import { $onboardingSurfaces, onboardingSurfaceActive } from '@/store/onboarding-presence'
 import type { OAuthProvider } from '@/types/hermes'
 
+import { AppearanceChoice } from './appearance-choice'
 import { DocsLink, FlowPanel, Status } from './flow'
 import { FreeTierSetupNotice } from './free-tier-setup-notice'
 import { DecodedLabel } from './glyph'
@@ -567,6 +568,7 @@ function Header() {
     <div className="bg-(--ui-chat-bubble-background) px-5 pt-5 pb-1">
       <h2 className="text-[0.9375rem] font-semibold tracking-tight">{t.onboarding.headerTitle}</h2>
       <p className="mt-1 max-w-xl text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">{t.onboarding.headerDesc}</p>
+      <AppearanceChoice />
     </div>
   )
 }

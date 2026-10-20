@@ -42,3 +42,13 @@ describe('isProviderSetupErrorMessage', () => {
     expect(isProviderSetupErrorMessage(undefined)).toBe(false)
   })
 })
+
+describe('Somnus wording', () => {
+  it('treats the not-connected message as a setup state', () => {
+    expect(
+      isProviderSetupErrorMessage(
+        'Somnus is not connected to any AI provider yet. Open Settings to set up the model provider, then try again.'
+      )
+    ).toBe(true)
+  })
+})

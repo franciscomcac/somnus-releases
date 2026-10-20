@@ -610,6 +610,9 @@ export interface Translations {
   }
 
   titlebar: {
+    /** Somnus: titlebar light/dark switch (optional; English fallback). */
+    lightMode?: string
+    darkMode?: string
     hideSidebar: string
     showSidebar: string
     search: string
@@ -3205,6 +3208,8 @@ export interface Translations {
 
   onboarding: {
     headerTitle: string
+    /** Somnus: label of the light/dark choice on the sign-up screen (optional). */
+    appearanceChoice?: string
     headerDesc: string
     somnusKeyTitle: string
     somnusKeyDesc: string
