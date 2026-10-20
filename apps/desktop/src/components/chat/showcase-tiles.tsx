@@ -21,6 +21,8 @@ import { composerFloatingPill } from './composer-dock'
 interface DemoPrompt {
   id: string
   icon: string
+  /** Small mono tag above the card text ("task", "demo · browser"). */
+  kind: string
   label: string
   prompt: string
   /** Something to open before the prompt lands (the browser pane for the browsing demo). */
@@ -31,6 +33,7 @@ export const SHOWCASE_DEMOS: readonly DemoPrompt[] = [
   {
     id: 'research',
     icon: 'search',
+    kind: 'task · web',
     label: 'Research into a spreadsheet',
     prompt:
       'Research the 5 best-reviewed budget mechanical keyboards available right now and save a spreadsheet with name, price, switch type and a source link for each.'
@@ -38,6 +41,7 @@ export const SHOWCASE_DEMOS: readonly DemoPrompt[] = [
   {
     id: 'browse',
     icon: 'globe',
+    kind: 'demo · browser',
     label: 'Watch it browse',
     prompt:
       'Open https://news.ycombinator.com in the preview pane, read the front page, and give me the 5 most interesting stories with one line each.',
@@ -46,6 +50,7 @@ export const SHOWCASE_DEMOS: readonly DemoPrompt[] = [
   {
     id: 'board',
     icon: 'project',
+    kind: 'task · board',
     label: 'Plan it on a board',
     prompt:
       'Plan a one-week launch for a small side project as tasks on the Kanban board, with an owner and a day for each task, then start on the first one.'
@@ -53,6 +58,7 @@ export const SHOWCASE_DEMOS: readonly DemoPrompt[] = [
   {
     id: 'schedule',
     icon: 'watch',
+    kind: 'routine',
     label: 'Every morning, for me',
     prompt: 'Every weekday at 9am, send me a short summary of the most important AI news from the last 24 hours.'
   }
@@ -72,7 +78,16 @@ const SHOWCASE_LINKS: readonly ShowcaseLink[] = [
   { id: 'hud', icon: 'window', label: 'HUD mode' }
 ]
 
-const tile = cn(composerFloatingPill, 'pointer-events-auto max-w-64')
+// Somnus App v2: suggestion cards in a 2×2 grid, a mono tag over the text.
+const card = cn(
+  'pointer-events-auto flex min-h-19 flex-col items-start gap-1.5 rounded-[0.625rem] border border-border px-3.5 py-3 text-left',
+  'bg-muted transition-colors hover:border-input hover:bg-card'
+)
+
+const link = cn(
+  composerFloatingPill,
+  'pointer-events-auto border-transparent bg-transparent text-(--ui-text-tertiary) backdrop-blur-none'
+)
 
 // Router-independent (the intro also renders outside a <Router>, e.g. in tests and
 // pop-out windows): same mechanics as the plugin SDK's `host.navigate`.
@@ -110,25 +125,20 @@ export function ShowcaseTiles() {
   }
 
   return (
-    <div className="mt-5 flex w-full min-w-0 flex-col items-center gap-2" data-slot="somnus_showcase">
-      <div className="flex max-w-xl flex-wrap justify-center gap-1.5">
+    <div className="mt-7 flex w-full min-w-0 flex-col items-center gap-4" data-slot="somnus_showcase">
+      <div className="grid w-full max-w-xl grid-cols-2 gap-2">
         {SHOWCASE_DEMOS.map(demo => (
-          <button className={tile} key={demo.id} onClick={() => tryDemo(demo)} title={demo.prompt} type="button">
-            <Codicon className="shrink-0 opacity-70" name={demo.icon} size="0.75rem" />
-            <span className="truncate">{demo.label}</span>
+          <button className={card} key={demo.id} onClick={() => tryDemo(demo)} title={demo.prompt} type="button">
+            <span className="font-mono text-[0.6875rem] tracking-wide text-(--ui-text-tertiary)">{demo.kind}</span>
+            <span className="text-[0.8125rem] leading-snug text-foreground">{demo.label}</span>
           </button>
         ))}
       </div>
-      <div className="flex max-w-xl flex-wrap justify-center gap-1.5">
-        {SHOWCASE_LINKS.filter(link => link.id !== 'hud' || hudAvailable).map(link => (
-          <button
-            className={cn(tile, 'border-transparent bg-transparent text-(--ui-text-tertiary)')}
-            key={link.id}
-            onClick={() => open(link.id)}
-            type="button"
-          >
-            <Codicon className="shrink-0 opacity-70" name={link.icon} size="0.75rem" />
-            <span className="truncate">{link.label}</span>
+      <div className="flex max-w-xl flex-wrap justify-center gap-1">
+        {SHOWCASE_LINKS.filter(item => item.id !== 'hud' || hudAvailable).map(item => (
+          <button className={link} key={item.id} onClick={() => open(item.id)} type="button">
+            <Codicon className="shrink-0 opacity-70" name={item.icon} size="0.75rem" />
+            <span className="truncate">{item.label}</span>
           </button>
         ))}
       </div>

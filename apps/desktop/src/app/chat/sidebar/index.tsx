@@ -150,6 +150,7 @@ import {
 import type { SidebarNavItem } from '../../types'
 import { type NewSessionSplitHandler, startNewSessionDrag } from '../new-session-drag'
 
+import { SidebarAccountCard } from './account-card'
 import { SidebarSectionAddButton } from './chrome'
 import { SidebarCronJobsSection } from './cron-jobs-section'
 import { SidebarFilterMenu } from './filter-menu'
@@ -208,7 +209,7 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
   {
     id: 'new-session',
     label: '',
-    icon: props => <Codicon name="robot" {...props} />,
+    icon: props => <Codicon name="add" {...props} />,
     action: 'new-session',
     keybindActionId: 'session.new'
   },
@@ -1564,25 +1565,7 @@ export function ChatSidebar({
       })
     )
 
-  return (
-    <Sidebar
-      className={cn(
-        // Visibility is the layout tree's job (a hidden zone is display:none;
-        // the narrow overlay renders the live instance) — the sidebar always
-        // paints itself fully.
-        'relative h-full min-w-0 overflow-hidden border-t-0 border-b-0 text-foreground transition-none',
-        panesFlipped ? 'border-l border-r-0' : 'border-r border-l-0',
-        'border-(--sidebar-edge-border) bg-(--ui-sidebar-surface-background) opacity-100'
-      )}
-      collapsible="none"
-      data-tip-region=""
-      data-tour="sessions-sidebar"
-    >
-      <SidebarContent className="gap-0 overflow-hidden bg-transparent px-2.5">
-        <SidebarGroup className="shrink-0 p-0 pb-2 pt-[calc(var(--titlebar-height)+0.375rem)]">
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-px">
-              {navItems.map(item => {
+  const renderNavItem = (item: SidebarNavItem, iconOnly = false) => {
                 const isInteractive = Boolean(item.action) || Boolean(item.route)
 
                 const active =
@@ -1598,6 +1581,7 @@ export function ChatSidebar({
                 const button = (
                   <SidebarMenuButton
                     aria-disabled={!isInteractive}
+                    aria-label={iconOnly ? (s.nav[item.id] ?? item.label) : undefined}
                     className={cn(
                       // no-drag: these rows sit directly under the titlebar's
                       // [-webkit-app-region:drag] strips (app-shell.tsx), with only
@@ -1606,15 +1590,21 @@ export function ChatSidebar({
                       // resolved region has been observed to swallow clicks on the
                       // top rows. Same carve-out as USER_BUBBLE_BASE_CLASS in
                       // thread.tsx.
-                      'flex h-7 w-full justify-start gap-2 rounded-md border border-transparent px-2 text-left text-[0.8125rem] font-medium text-(--ui-text-secondary) transition-colors duration-100 ease-out [-webkit-app-region:no-drag] hover:bg-(--ui-control-hover-background) hover:text-foreground hover:transition-none',
+                      'flex h-7 w-full justify-start gap-2 rounded-md border border-transparent px-2 text-left text-[0.8125rem] font-normal text-(--ui-text-secondary) transition-colors duration-100 ease-out [-webkit-app-region:no-drag] hover:bg-(--ui-control-hover-background) hover:text-foreground hover:transition-none',
                       active &&
                         'border-(--ui-stroke-tertiary) bg-(--ui-control-active-background) text-foreground shadow-none hover:border-(--ui-stroke-tertiary)!',
+                      // Somnus App v2: "New task" is the one raised control in the rail.
+                      isNewSession &&
+                        'mb-2 h-9 border-border bg-card font-medium text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-input hover:bg-card',
                       !isInteractive &&
-                        'cursor-default hover:border-transparent hover:bg-transparent hover:text-inherit'
+                        'cursor-default hover:border-transparent hover:bg-transparent hover:text-inherit',
+                      // Somnus: everything but "New task" sits in one icon row.
+                      iconOnly && 'size-6 min-w-0 justify-center gap-0 px-0'
                     )}
                     // A tip anchored to the label points at the end of the
                     // word; the row is what it's actually about.
                     data-tip-region=""
+                    data-tour={iconOnly ? `sidebar-nav-${item.id}` : undefined}
                     onClick={() => {
                       // A plain new session lands in whatever profile the live
                       // gateway is on (= the active switcher context). null →
@@ -1666,7 +1656,11 @@ export function ChatSidebar({
                         `flex-1` looked like it was for.
                         Its own `sidebar-nav-` namespace: the overlay nav owns
                         `nav-<id>`, and both are on screen with Settings open. */}
-                    <span className="min-w-0 truncate" data-tip-arrow-only="" data-tour={`sidebar-nav-${item.id}`}>
+                    <span
+                      className={iconOnly ? 'sr-only' : 'min-w-0 truncate'}
+                      data-tip-arrow-only=""
+                      data-tour={iconOnly ? undefined : `sidebar-nav-${item.id}`}
+                    >
                       {s.nav[item.id] ?? item.label}
                     </span>
                     {isNewSession && (
@@ -1705,8 +1699,30 @@ export function ChatSidebar({
                     )}
                   </SidebarMenuItem>
                 )
-              })}
+  }
+
+  return (
+    <Sidebar
+      className={cn(
+        // Visibility is the layout tree's job (a hidden zone is display:none;
+        // the narrow overlay renders the live instance) — the sidebar always
+        // paints itself fully.
+        'relative h-full min-w-0 overflow-hidden border-t-0 border-b-0 text-foreground transition-none',
+        panesFlipped ? 'border-l border-r-0' : 'border-r border-l-0',
+        'border-(--sidebar-edge-border) bg-(--ui-sidebar-surface-background) opacity-100'
+      )}
+      collapsible="none"
+      data-tip-region=""
+      data-tour="sessions-sidebar"
+    >
+      <SidebarContent className="gap-0 overflow-hidden bg-transparent px-2.5">
+        <SidebarGroup className="shrink-0 p-0 pb-2 pt-[calc(var(--titlebar-height)+0.375rem)]">
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-px">
+              {navItems.filter(item => item.id === 'new-session').map(item => renderNavItem(item))}
             </SidebarMenu>
+            <SidebarMenu aria-label={s.navToolbarAria ?? 'Workspace'} className="w-full min-w-0 flex-row flex-nowrap justify-between px-0.5" role="toolbar">
+              {navItems.filter(item => item.id !== 'new-session').map(item => renderNavItem(item, true))}            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -2051,6 +2067,10 @@ export function ChatSidebar({
             <ProfileRail />
           </div>
         )}
+
+        <div className="mt-auto shrink-0 px-0.5 pb-2">
+          <SidebarAccountCard />
+        </div>
       </SidebarContent>
       <ProjectDialog />
       {/* One mount for the whole app. The header of WorktreeDialog tells why. */}

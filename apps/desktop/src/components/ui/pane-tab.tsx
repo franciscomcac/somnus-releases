@@ -223,7 +223,8 @@ export const PaneTabLabel = React.forwardRef<HTMLElement, PaneTabLabelProps>(fun
     >
       <span
         className={cn(
-          'block min-w-0 truncate text-[9px] font-medium tracking-wide uppercase group-data-[closeable]/tab:text-clip',
+          // Somnus App v2: tab titles in normal case ("Terminal", "Changes").
+          'block min-w-0 truncate text-[0.75rem] font-medium group-data-[closeable]/tab:text-clip',
           className
         )}
       >

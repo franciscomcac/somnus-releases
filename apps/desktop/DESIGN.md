@@ -331,6 +331,22 @@ so glass and message-bubble transparency do not reveal scrolling text.
 
 ## Chat, tools & boot surfaces
 
+- **Somnus App v2 tool rows:** every tool row is a card
+  (`TOOL_EXPANDED_SHELL_CLASS`: 10px radius, `--ui-stroke-tertiary` border,
+  `--ui-widget-surface-background`), open or closed, at full opacity. The row
+  reads `[verb chip] subject … meta ✓`: the mono verb tag comes from
+  `toolVerb()` in `tool/run-summary.ts` (`run`, `edit`, `read`, `search`,
+  `browse`, `spawn`); counts, diff stats (`--ui-green` / `--ui-red`) and
+  duration sit at the right edge in mono; success is a filled `--ui-green`
+  disc. Composer model / reasoning pills are bordered mono chips.
+- **Somnus App v2 turn end, panes, status bar:** a turn that ran tools closes
+  on `TurnDoneCard` (`thread/changed-files-card.tsx`: green disc, "Done",
+  mono steps · time · files, changed files, primary "Review changes"); a
+  plain answer gets none. Pane titles use `SidebarPanelLabel variant="pane"`
+  (normal case, optional mono `meta` such as `clean` / `3 files`); rail
+  sections keep the quiet uppercase `section` variant, no dither square. Pane
+  tab labels are normal case. The status bar is mono with a hairline on top
+  and always ends with a "Ctrl K commands" button.
 - The transcript and composer are built on `@assistant-ui/react`. Extend the
   existing components under `src/components/assistant-ui` and
   `src/app/chat/composer`; do not fork a second markdown, message, tool-call, or

@@ -260,6 +260,9 @@ export function buildAppEnv(sandbox: Sandbox, extra: Record<string, string> = {}
   return {
     ...clean,
     HERMES_HOME: sandbox.hermesHome,
+    // Somnus: the desktop ignores HERMES_HOME (a customer's own Hermes install
+    // must stay untouched) and reads SOMNUS_HOME instead.
+    SOMNUS_HOME: sandbox.hermesHome,
     HERMES_DESKTOP_USER_DATA_DIR: sandbox.userDataDir,
     HERMES_DESKTOP_IGNORE_EXISTING: '1',
     HERMES_DESKTOP_HERMES_ROOT: REPO_ROOT,

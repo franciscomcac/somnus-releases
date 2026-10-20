@@ -103,7 +103,10 @@ export default {
   id: ID,
   name: translateNow('common.bots'),
   description:
-    'Bot Mode — a one-chat-per-agent roster with avatars, routines, group chats, and bot-to-bot messaging. Ships with the app; disable here if unwanted.',
+    'Bot Mode — a one-chat-per-agent roster with avatars, routines, group chats, and bot-to-bot messaging. Ships with the app; enable here if wanted.',
+  // Somnus: off until turned on in Plugins, so the rail opens on tasks alone
+  // (no SESSIONS | BOTS strip). A user who switched it on keeps it.
+  defaultEnabled: false,
   register(ctx: PluginContext) {
     setPluginCtx(ctx)
     // The user's own roster sections. Read once at register; every mutation

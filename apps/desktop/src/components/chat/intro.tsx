@@ -4,7 +4,6 @@ import { capitalize, normalize } from '@/lib/text'
 
 import introCopyJsonl from './intro-copy.jsonl?raw'
 import { ShowcaseTiles } from './showcase-tiles'
-import { Wordmark } from './wordmark'
 
 type IntroCopy = {
   headline: string
@@ -146,8 +145,6 @@ function pickCopy(copies: IntroCopy[], seed = 0): IntroCopy {
   return copies[Math.abs(seed) % copies.length] || FALLBACK_COPY[0]
 }
 
-const WORDMARK = 'SOMNUS'
-
 function resolveCopy(personality?: string, seed?: number): IntroCopy {
   const personalityKey = normalizeKey(personality)
 
@@ -167,12 +164,24 @@ export function Intro({ personality, seed }: IntroProps) {
       className="pointer-events-none flex w-full min-w-0 flex-col items-center justify-center px-0.5 py-6 text-center text-muted-foreground sm:px-6 lg:px-8"
       data-slot="aui_intro"
     >
-      <div className="w-full min-w-0">
-        <Wordmark className="mb-1" text={WORDMARK} />
-
-        <p className="m-0 text-center leading-normal tracking-tight">{copy.body}</p>
+      <div className="flex w-full min-w-0 flex-col items-center">
+        <SomnusMark className="mb-5 size-11 text-foreground" />
+        <h1 className="m-0 text-[1.75rem] font-medium leading-tight tracking-[-0.02em] text-foreground">
+          What should we <em className="font-display text-[1.1em] font-normal tracking-normal">work on?</em>
+        </h1>
+        <p className="mt-2 mb-0 max-w-md text-center text-sm leading-normal">{copy.body}</p>
         <ShowcaseTiles />
       </div>
     </div>
+  )
+}
+
+/** The ring-and-dot mark from the Somnus App v2 design. */
+function SomnusMark({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 44 44">
+      <circle cx="22" cy="22" r="19.5" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="22" cy="22" fill="currentColor" r="6.5" />
+    </svg>
   )
 }

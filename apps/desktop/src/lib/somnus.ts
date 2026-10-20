@@ -68,7 +68,10 @@ export function somnusOnlyModelOptions<T extends { providers?: null | readonly P
     return result
   }
 
-  return { ...result, providers: result.providers.filter(isSomnusProvider) }
+  // Show the gateway as "Somnus", never its hosting address.
+  const providers = result.providers.filter(isSomnusProvider).map(row => ({ ...row, name: 'Somnus' }))
+
+  return { ...result, providers }
 }
 
 // The Somnus gateway serves every vendor's models under one provider. The model

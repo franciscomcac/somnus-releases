@@ -80,7 +80,13 @@ export function ReviewPane() {
           <div className="flex min-w-0 flex-1">
             {/* Pure self-naming label — redundant under a zone tab that already
                 says "review", so the zone header hides it (styles.css). */}
-            <SidebarPanelLabel data-pane-self-label="">{c.review}</SidebarPanelLabel>
+            <SidebarPanelLabel
+              data-pane-self-label=""
+              meta={loading ? '…' : hasFiles ? `${files.length} ${files.length === 1 ? 'file' : 'files'}` : 'clean'}
+              variant="pane"
+            >
+              {t.sidebar.review}
+            </SidebarPanelLabel>
           </div>
           <Tip label={treeMode === 'tree' ? c.viewAsList : c.viewAsTree}>
             <Button

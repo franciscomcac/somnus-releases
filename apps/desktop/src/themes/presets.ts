@@ -36,6 +36,61 @@ const SYSTEM_MONO = 'Menlo, Monaco, "SF Mono", "Courier Prime", monospace, ' + E
 
 export const DEFAULT_TYPOGRAPHY: DesktopThemeTypography = { fontSans: SYSTEM_SANS, fontMono: SYSTEM_MONO }
 
+// Bundled in styles.css (@font-face), so no stylesheet URL and no network.
+const SOMNUS_SANS = `"Instrument Sans", ${SYSTEM_SANS}`
+const SOMNUS_MONO = `"JetBrains Mono", ${SYSTEM_MONO}`
+
+/**
+ * Somnus — the default identity, from the "Somnus App v2" design: paper/ink
+ * neutrals in light, near-black in dark, Instrument Sans + JetBrains Mono,
+ * Instrument Serif for display accents (`font-display`).
+ */
+export const somnusTheme: DesktopTheme = {
+  name: 'somnus',
+  label: 'Somnus',
+  description: 'Paper and ink — the Somnus look',
+  ...THEME_PRESET_PALETTES.somnus,
+  typography: { fontSans: SOMNUS_SANS, fontMono: SOMNUS_MONO },
+  terminal: {
+    foreground: '#0a0a0a',
+    black: '#0a0a0a',
+    red: '#c4453c',
+    green: '#1f9d55',
+    yellow: '#9a6700',
+    blue: '#3b5bdb',
+    magenta: '#8250df',
+    cyan: '#1b7c83',
+    white: '#66656c',
+    brightBlack: '#a3a1ae',
+    brightRed: '#c4453c',
+    brightGreen: '#1f9d55',
+    brightYellow: '#9a6700',
+    brightBlue: '#3b5bdb',
+    brightMagenta: '#8250df',
+    brightCyan: '#1b7c83',
+    brightWhite: '#66656c'
+  },
+  darkTerminal: {
+    foreground: '#f3f3f1',
+    black: '#6b6a72',
+    red: '#ff6b5e',
+    green: '#3ccf7e',
+    yellow: '#e3b341',
+    blue: '#79a2ff',
+    magenta: '#d2a8ff',
+    cyan: '#56d4dd',
+    white: '#a3a1ae',
+    brightBlack: '#6b6a72',
+    brightRed: '#ff6b5e',
+    brightGreen: '#3ccf7e',
+    brightYellow: '#e3b341',
+    brightBlue: '#79a2ff',
+    brightMagenta: '#d2a8ff',
+    brightCyan: '#56d4dd',
+    brightWhite: '#f3f3f1'
+  }
+}
+
 /**
  * Nous — the canonical Somnus desktop identity, forked from the GitHub VS Code
  * theme (github.github-vscode-theme). Light is GitHub Light Default, dark is
@@ -387,13 +442,15 @@ export const slateTheme: DesktopTheme = {
   }
 }
 
+// Somnus first: the picker lists themes in this order. The Nous presets are
+// kept as exports (typography base, tests) but no longer offered — the app is
+// Somnus, and a stored 'nous'/'nous-alt' resolves to Somnus (see context.tsx).
 export const BUILTIN_THEMES: Record<string, DesktopTheme> = {
-  nous: nousTheme,
+  somnus: somnusTheme,
   github: githubTheme,
   catppuccin: catppuccinTheme,
   everforest: everforestTheme,
   solarized: solarizedTheme,
-  'nous-alt': nousAltTheme,
   midnight: midnightTheme,
   ember: emberTheme,
   mono: monoTheme,
@@ -404,4 +461,4 @@ export const BUILTIN_THEMES: Record<string, DesktopTheme> = {
 export const BUILTIN_THEME_LIST = Object.values(BUILTIN_THEMES)
 
 /** Skin used when nothing is persisted or the persisted name is retired. */
-export const DEFAULT_SKIN_NAME = 'nous'
+export const DEFAULT_SKIN_NAME = 'somnus'

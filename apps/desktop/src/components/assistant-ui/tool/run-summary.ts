@@ -85,6 +85,46 @@ export function toolPresentVerb(toolName: string): string {
   return CATEGORY_COPY[toolCategory(toolName)].present
 }
 
+const SEARCH_TOOLS = new Set(['search_files', 'session_search_recall', 'web_search'])
+
+/**
+ * Somnus App v2: the short mono tag on a tool row (`run`, `edit`, `read`,
+ * `search`, `browse`, `spawn`). Code-like on purpose, so it is not translated.
+ */
+export function toolVerb(toolName: string): string {
+  const category = toolCategory(toolName)
+
+  if (category === 'edit') {
+    return 'edit'
+  }
+
+  if (category === 'run') {
+    return 'run'
+  }
+
+  if (category === 'delegate') {
+    return 'spawn'
+  }
+
+  if (category === 'explore') {
+    if (SEARCH_TOOLS.has(toolName)) {
+      return 'search'
+    }
+
+    return toolName.startsWith('browser_') || toolName === 'web_extract' ? 'browse' : 'read'
+  }
+
+  if (toolName === 'memory') {
+    return 'memory'
+  }
+
+  if (toolName.startsWith('skill')) {
+    return 'skill'
+  }
+
+  return 'tool'
+}
+
 /** The thing a tool acted on, as the header should name it. */
 function toolTarget(tool: ToolCallLike): string {
   const args = parseMaybeObject(tool.args)

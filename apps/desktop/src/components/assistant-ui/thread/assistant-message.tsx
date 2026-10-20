@@ -18,7 +18,7 @@ import { useComposerScope } from '@/app/chat/composer/scope'
 import { useSessionView } from '@/app/chat/session-view'
 import { SETTINGS_ROUTE } from '@/app/routes'
 import { dispatchedTo } from '@/components/assistant-ui/thread/agent-delivery'
-import { ChangedFilesCard } from '@/components/assistant-ui/thread/changed-files-card'
+import { TurnDoneCard } from '@/components/assistant-ui/thread/changed-files-card'
 import {
   contentHasVisibleText,
   messageContentText,
@@ -462,7 +462,10 @@ const SettledChangedFiles: FC = () => {
     return s.message.status?.type === 'running' || !isLastMessage ? EMPTY_PARTS : s.message.parts
   })
 
-  return <ChangedFilesCard parts={settledParts} />
+  const durationS = useAuiState(s => s.message.metadata?.custom?.durationS as number | undefined)
+
+  // Somnus App v2: the turn closes on a "Done" card (steps, time, changed files).
+  return <TurnDoneCard durationS={durationS} parts={settledParts} />
 }
 
 /**

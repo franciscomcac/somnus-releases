@@ -20,6 +20,11 @@ import { ConnectorsTab } from './connectors/connectors-tab'
 import { PluginsTab } from './plugins/plugins-tab'
 import { CapabilityScopeSelector, useCapabilityScope } from './scope-selector'
 import { EmbeddedHubPicker } from './skills/embedded-hub-picker'
+
+// Somnus: the embedded hub is Hermes Agent's public website (its own branding,
+// docs and Discord links), so it stays out of the Skills tab. Installed skills
+// are unaffected; flip this to bring the browser back.
+const SHOW_EMBEDDED_HUB = false
 import { SKILLS_QUERY_KEY, skillSearchTerms, useSkillsQuery } from './skills/skills-data'
 import { SkillsTab } from './skills/skills-tab'
 import { refreshToolCalls } from './toolsets/tool-calls'
@@ -193,7 +198,7 @@ export function CapabilitiesView({
           <div className={mode === 'skills' ? 'min-h-40 flex-1 overflow-hidden' : 'min-h-0 flex-1'}>
             {loadGate ?? tabContent[mode]()}
           </div>
-          {hubMounted && (
+          {SHOW_EMBEDDED_HUB && hubMounted && (
             <EmbeddedHubPicker
               hidden={mode !== 'skills'}
               installedNames={installedSkillNames}

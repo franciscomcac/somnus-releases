@@ -2,7 +2,7 @@
 
 Output follows the petdex/Codex atlas contract the pet renderer reads
 (``agent/pet/constants.py``): 8 columns x 9 rows of 192x208 frames, rows in
-``CODEX_STATE_ROWS`` order, 6 frames used per row, transparent background.
+``CODEX_STATE_ROWS`` order, all 8 frames used per row, transparent background.
 
     python scripts/somnus/make_pet_sprite.py agent/pet/bundled/luna/spritesheet.webp
 
@@ -19,7 +19,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 FRAME_W, FRAME_H = 192, 208
 COLS, ROWS = 8, 9
-FRAMES = 6
+FRAMES = 8  # every atlas column is a real frame (the renderer plays all non-blank columns)
 SS = 4  # supersampling factor
 
 ROWS_ORDER = ["idle", "running-right", "running-left", "waving", "jumping", "failed", "waiting", "running", "review"]

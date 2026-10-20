@@ -27,7 +27,6 @@ import { CompactMarkdown } from '@/components/chat/compact-markdown'
 import { FileDiffPanel } from '@/components/chat/diff-lines'
 import { DisclosureRow } from '@/components/chat/disclosure-row'
 import {
-  SCAFFOLD_GLYPH_CLASS,
   SCAFFOLD_LABEL_CLASS,
   SCAFFOLD_META_CLASS,
   ScaffoldRow
@@ -37,13 +36,11 @@ import { Codicon } from '@/components/ui/codicon'
 import { CopyButton } from '@/components/ui/copy-button'
 import { DisclosureCaret } from '@/components/ui/disclosure-caret'
 import { FadeText } from '@/components/ui/fade-text'
-import { FileTypeIcon } from '@/components/ui/file-type-icon'
 import { GlyphSpinner } from '@/components/ui/glyph-spinner'
-import { ToolIcon } from '@/components/ui/tool-icon'
 import { useI18n } from '@/i18n'
 import { connectorCalls, mcpTargets } from '@/lib/connector-tools'
 import { PrettyLink, LinkifiedText as SharedLinkifiedText, urlSlugTitleLabel } from '@/lib/external-link'
-import { AlertCircle, CheckCircle2 } from '@/lib/icons'
+import { AlertCircle, Check } from '@/lib/icons'
 import { isOnboardingEnabled } from '@/lib/onboarding-enabled'
 import { toolResultRecord } from '@/lib/tool-result-metadata'
 import { useEnterAnimation } from '@/lib/use-enter-animation'
@@ -81,7 +78,7 @@ import {
   type ToolStatus,
   type ToolTitleAction
 } from './fallback-model'
-import { isToolCallPart, summarizeToolRun } from './run-summary'
+import { isToolCallPart, summarizeToolRun, toolVerb } from './run-summary'
 import { ToolRunTicker } from './run-ticker'
 
 // `true` when a ToolEntry is rendered inside an embedding wrapper that owns
@@ -99,7 +96,6 @@ const SEARCH_HIT_TITLE_CLASS =
 const TOOL_HEADER_SUBTITLE_CLASS =
   'text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)'
 
-const TOOL_HEADER_GLYPH_WRAP_CLASS = cn(SCAFFOLD_GLYPH_CLASS, 'self-center')
 
 // Glass-style section label that sits above any pre/JSON/output block.
 // Lowercase tracking + tiny size so it reads as a quiet field label rather
@@ -111,7 +107,13 @@ const TOOL_SECTION_LABEL_CLASS = 'mb-1 text-[0.65rem] font-medium uppercase trac
 const TOOL_SECTION_SURFACE_CLASS =
   'max-h-20 max-w-full overflow-auto bg-transparent px-2 py-1.5 text-(--ui-text-secondary)'
 
-const TOOL_EXPANDED_SHELL_CLASS = 'rounded-[0.3125rem] border border-(--ui-stroke-tertiary)'
+// Somnus App v2: every tool row is a small card, open or not.
+const TOOL_EXPANDED_SHELL_CLASS =
+  'rounded-[0.625rem] border border-(--ui-stroke-tertiary) bg-(--ui-widget-surface-background)'
+
+// The mono verb tag at the start of a row (`run`, `edit`, `read`…).
+const TOOL_VERB_CHIP_CLASS =
+  'shrink-0 rounded-[0.25rem] border border-(--ui-stroke-tertiary) px-1 font-mono text-[0.625rem] leading-4 text-(--ui-text-tertiary)'
 
 const TOOL_SECTION_PRE_CLASS = cn(TOOL_SECTION_SURFACE_CLASS, 'font-mono text-[0.7rem] leading-relaxed')
 
@@ -216,57 +218,16 @@ function statusGlyph(status: ToolStatus, copy: ToolStatusCopy): ReactNode {
     )
   }
 
+  // Somnus App v2: a filled green disc with a white check.
   return (
-    <CheckCircle2
-      aria-label={copy.statusDone}
-      className="size-3.5 shrink-0 text-emerald-600/85 dark:text-emerald-400/85"
-    />
+    <span className="grid size-3.5 shrink-0 place-items-center rounded-full bg-(--ui-green) text-white">
+      <Check aria-hidden="true" className="size-2.5" strokeWidth={3} />
+      <span className="sr-only">{copy.statusDone}</span>
+    </span>
   )
 }
 
-// Leading glyph for any tool-row header. Status (running/error/warning)
-// takes precedence; otherwise falls back to the tool's codicon. Returns
-// null when neither applies so callers can render unconditionally.
-function ToolGlyph({
-  copy,
-  filePath,
-  icon,
-  legendary,
-  status
-}: {
-  copy: ToolStatusCopy
-  filePath?: string
-  icon?: string
-  /** Landed memory write — keep the brain glyph, tint it gold→purple. */
-  legendary?: boolean
-  status?: ToolStatus
-}) {
-  const node = status ? (
-    statusGlyph(status, copy)
-  ) : filePath ? (
-    <FileTypeIcon className="text-(--ui-text-tertiary)" path={filePath} size="0.875rem" />
-  ) : icon ? (
-    <ToolIcon
-      className={legendary ? 'text-(--tool-memory-legendary-icon)' : 'text-(--ui-text-tertiary)'}
-      name={icon}
-      size="0.875rem"
-    />
-  ) : null
 
-  return node ? (
-    <span className={cn(TOOL_HEADER_GLYPH_WRAP_CLASS, legendary && 'tool-memory-legendary-glyph')}>{node}</span>
-  ) : null
-}
-
-// Which status (if any) should pre-empt the tool's icon in the leading
-// slot. Success is silent — the row reads as "done" without a checkmark.
-function leadingStatus(isPending: boolean, status: ToolStatus): ToolStatus | undefined {
-  if (isPending) {
-    return 'running'
-  }
-
-  return status === 'success' || status === 'notice' ? undefined : status
-}
 
 function SearchResultsList({ hits }: { hits: SearchResultRow[] }) {
   return (
@@ -519,10 +480,33 @@ function ToolEntry({ part }: ToolEntryProps) {
   // `opacity-0` (yet still clickable) button straddling the caret/duration made
   // the disclosure caret hard to hit. Copy now lives in the expanded body's
   // top-right, where it can't fight the caret for the right edge.
+  // Somnus App v2: counts, diff stats and duration sit at the row's right
+  // edge (mono), followed by the status disc.
+  const meta = (
+    <>
+      {!isPending && view.countLabel && (
+        <span className={cn(SCAFFOLD_META_CLASS, 'font-mono', memoryMetaClass)}>{view.countLabel}</span>
+      )}
+      {showDiffStats && diffStats && (
+        <span className="flex shrink-0 items-center gap-1 font-mono text-[0.625rem] tabular-nums">
+          {diffStats.added > 0 && <span className="text-(--ui-green)">+{diffStats.added}</span>}
+          {diffStats.removed > 0 && <span className="text-(--ui-red)">−{diffStats.removed}</span>}
+        </span>
+      )}
+      {!isFileEdit && !isPending && view.durationLabel && (
+        <span className={cn(SCAFFOLD_META_CLASS, 'font-mono', memoryMetaClass)}>{view.durationLabel}</span>
+      )}
+    </>
+  )
+
+  const rowStatus: ToolStatus = isPending ? 'running' : view.status === 'notice' ? 'success' : view.status
+
   const trailing = !embedded ? (
     <span className="flex shrink-0 items-center gap-1.5">
       <TimelineTimestamp className={SCAFFOLD_META_CLASS} completedAt={completedAt} timestamp={timestamp} />
-      {isPending && <ActivityTimerText className={SCAFFOLD_META_CLASS} seconds={elapsed} />}
+      {meta}
+      {isPending && <ActivityTimerText className={cn(SCAFFOLD_META_CLASS, 'font-mono')} seconds={elapsed} />}
+      {statusGlyph(rowStatus, copy)}
     </span>
   ) : undefined
 
@@ -568,7 +552,7 @@ function ToolEntry({ part }: ToolEntryProps) {
     <div
       className={cn(
         'group/tool-block min-w-0 max-w-full overflow-hidden text-[length:var(--conversation-tool-font-size)] text-(--ui-text-tertiary)',
-        open && TOOL_EXPANDED_SHELL_CLASS
+        TOOL_EXPANDED_SHELL_CLASS
       )}
       data-conversation-scaffold=""
       data-file-edit={isFileEdit && open ? '' : undefined}
@@ -577,7 +561,7 @@ function ToolEntry({ part }: ToolEntryProps) {
       data-tool-row=""
       ref={enterRef}
     >
-      <div className={cn(open && 'border-b border-(--ui-stroke-tertiary) px-2 py-1.5')}>
+      <div className={cn('px-2.5 py-1.5', open && 'border-b border-(--ui-stroke-tertiary)')}>
         <DisclosureRow
           action={dismissAction}
           onToggle={
@@ -599,36 +583,17 @@ function ToolEntry({ part }: ToolEntryProps) {
             className="flex min-w-0 items-center gap-1.5"
             title={isFileEdit && view.subtitle ? view.subtitle : undefined}
           >
-            <ToolGlyph
-              copy={copy}
-              filePath={isFileEdit ? view.subtitle : undefined}
-              icon={view.icon}
-              legendary={memoryLegendary}
-              status={leadingStatus(isPending, view.status)}
-            />
-            <ToolTitle
-              isPending={isPending}
-              legendary={memoryLegendary}
-              status={view.status}
-              title={view.title}
-              titleAction={view.titleAction}
-            />
-            {!isPending && view.countLabel && (
-              <span className={cn(SCAFFOLD_META_CLASS, memoryMetaClass)}>{view.countLabel}</span>
-            )}
-            {showDiffStats && diffStats && (
-              <span className="flex shrink-0 items-center gap-1 font-mono text-[0.625rem] tabular-nums">
-                {diffStats.added > 0 && (
-                  <span className="text-emerald-600 dark:text-emerald-400">+{diffStats.added}</span>
-                )}
-                {diffStats.removed > 0 && (
-                  <span className="text-rose-600 dark:text-rose-400">−{diffStats.removed}</span>
-                )}
-              </span>
-            )}
-            {!isFileEdit && !isPending && view.durationLabel && (
-              <span className={cn(SCAFFOLD_META_CLASS, memoryMetaClass)}>{view.durationLabel}</span>
-            )}
+            <span className={TOOL_VERB_CHIP_CLASS}>{toolVerb(part.toolName)}</span>
+            <span className={cn('min-w-0', (isFileEdit || view.tone === 'terminal') && 'font-mono')}>
+              <ToolTitle
+                isPending={isPending}
+                legendary={memoryLegendary}
+                status={view.status}
+                title={view.title}
+                titleAction={view.titleAction}
+              />
+            </span>
+            {embedded && meta}
           </span>
         </DisclosureRow>
       </div>

@@ -14,6 +14,7 @@ import { Check, Download, Loader2, Palette, Trash2 } from '@/lib/icons'
 import { selectableCardClass } from '@/lib/selectable-card'
 import { normalize } from '@/lib/text'
 import { cn } from '@/lib/utils'
+import { $autoRevealPanes, setAutoRevealPanes } from '@/store/auto-reveal'
 import { $backdrop, setBackdrop } from '@/store/backdrop'
 import { $composerPopoutGesturesEnabled, setComposerPopoutGesturesEnabled } from '@/store/composer-popout'
 import { $embedAllowed, $embedMode, clearEmbedAllowed, type EmbedMode, setEmbedMode } from '@/store/embed-consent'
@@ -430,6 +431,7 @@ export function AppearanceSettings({ subpage }: AppearanceSettingsProps = {}) {
   const embedMode = useStore($embedMode)
   const embedAllowed = useStore($embedAllowed)
   const composerPopoutGesturesEnabled = useStore($composerPopoutGesturesEnabled)
+  const autoRevealPanes = useStore($autoRevealPanes)
   const translucency = useStore($translucency)
   const glassMode = translucency.mode === 'glass' && GLASS_SUPPORTED
   const userBubbleTransparency = useStore($userBubbleTransparency)
@@ -953,6 +955,15 @@ export function AppearanceSettings({ subpage }: AppearanceSettingsProps = {}) {
           )}
 
           {show('general') && <ResumeLastSessionSetting />}
+
+          {show('general') && (
+            <ToggleRow
+              checked={autoRevealPanes}
+              description={a.autoRevealPanesDesc ?? 'Open the terminal, browser and changes as the agent starts using them, in the chat you are looking at.'}
+              label={a.autoRevealPanesTitle ?? 'Panes follow the agent'}
+              onChange={setAutoRevealPanes}
+            />
+          )}
 
           {show('chat-display') && (
             <ListRow

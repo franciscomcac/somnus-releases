@@ -92,6 +92,40 @@
   src: url('./fonts/JetBrainsMono-Italic.woff2') format('woff2');
 }
 
+/* Somnus typography (SIL OFL): Instrument Sans for UI text (a variable face,
+   one file covers 400–700), Instrument Serif for display accents. Bundled so
+   the app looks the same offline as on somnus.world. */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/InstrumentSans-Latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/InstrumentSans-LatinExt.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/InstrumentSerif-Regular-Latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/InstrumentSerif-Italic-Latin.woff2') format('woff2');
+}
+
 @theme inline {
   --color-background: var(--dt-background);
   --color-foreground: var(--dt-foreground);
@@ -118,6 +152,7 @@
 
   --font-sans: var(--dt-font-sans);
   --font-mono: var(--dt-font-mono);
+  --font-display: 'Instrument Serif', Georgia, serif;
 
   --spacing-mul: var(--dt-spacing-mul, 1);
 
@@ -462,7 +497,9 @@
        root element at runtime (an ungated leva slider default), so this 0.6
        only ever applied to the windows that don't mount the backdrop. Pinned
        to the value the app actually renders at. */
-    --radius-scalar: 0.2;
+    /* Somnus: soft corners (controls ~6–7px, panels ~11px), matching the
+       Somnus App v2 design. */
+    --radius-scalar: 0.7;
 
     /* Space under last message vs overlay composer — driven by the measured composer DOCK height (see
        composer/index.tsx), which covers the micro-action strip, the status stack, the composer, and the
@@ -2071,7 +2108,8 @@ body.guest-pointer-lock :is(webview, iframe) {
    keep them transparent and fade them slightly. The reading column (prose)
    stays at full strength; scaffolding lifts back to full opacity on
    hover/focus so it stays legible when the user actually wants to read it. */
-[data-slot='tool-block'],
+/* Somnus App v2: tool rows are cards (their own background), so only the
+   thinking disclosure stays transparent. */
 [data-slot='aui_thinking-disclosure'] {
   background: transparent !important;
 }
@@ -2087,9 +2125,10 @@ body.guest-pointer-lock :is(webview, iframe) {
    one row (an open diff) could not stay lit while its siblings dimmed. Hence
    the tool group wrapper carries no mark and each row inside it carries its
    own — no two marked elements nest, so the fade never compounds. */
-[data-slot='aui_assistant-message-content'] [data-conversation-scaffold],
-[data-slot='aui_background-result'] [data-conversation-scaffold],
+[data-slot='aui_assistant-message-content'] [data-conversation-scaffold]:not([data-slot='tool-block']),
+[data-slot='aui_background-result'] [data-conversation-scaffold]:not([data-slot='tool-block']),
 [data-slot='aui_background-resume'] {
+  /* Somnus App v2: tool-row cards stay at full strength; the rest still fades. */
   opacity: 0.67;
   transition: opacity 120ms ease-out;
 }

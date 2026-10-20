@@ -15,8 +15,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tip, TipKeybindLabel, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ContribRender } from '@/contrib/react/boundary'
 import { useI18n } from '@/i18n'
+import { IS_MAC } from '@/lib/keybinds/combo'
 import { useKeybindHint } from '@/lib/keybinds/use-keybind-hint'
 import { cn } from '@/lib/utils'
+import { openCommandPalette } from '@/store/command-palette'
 import {
   $statusbarHiddenIds,
   isStatusbarLayoutDefault,
@@ -101,7 +103,8 @@ export function StatusbarControls({ className, leftItems = [], items = [], ...pr
       <ContextMenuTrigger asChild>
         <footer
           className={cn(
-            'flex h-5 shrink-0 items-stretch justify-between gap-2 bg-(--ui-sidebar-surface-background) px-1 py-0 text-(--ui-text-tertiary) [-webkit-app-region:no-drag]',
+            // Somnus App v2: a mono status line with a hairline above it.
+            'flex h-6 shrink-0 items-stretch justify-between gap-2 border-t border-(--ui-stroke-tertiary) bg-(--ui-sidebar-surface-background) px-1.5 py-0 font-mono text-[0.6875rem] text-(--ui-text-tertiary) [-webkit-app-region:no-drag]',
             className
           )}
           data-slot="statusbar"
@@ -120,6 +123,14 @@ export function StatusbarControls({ className, leftItems = [], items = [], ...pr
             {items.filter(visible).map(item => (
               <StatusbarItemView item={item} key={`right:${item.id}`} navigate={navigate} />
             ))}
+            {/* Somnus App v2: the way into everything, always named. */}
+            <button
+              className="flex shrink-0 items-center px-1.5 text-(--ui-text-tertiary) transition-colors hover:text-foreground"
+              onClick={openCommandPalette}
+              type="button"
+            >
+              {IS_MAC ? '⌘K' : 'Ctrl K'} commands
+            </button>
           </div>
         </footer>
       </ContextMenuTrigger>

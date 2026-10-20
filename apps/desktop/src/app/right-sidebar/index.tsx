@@ -159,7 +159,7 @@ function FilesystemTab({
     <div className="flex min-h-0 flex-1 flex-col">
       <RightSidebarSectionHeader>
         <div className="flex min-w-0 flex-1">
-          <SidebarPanelLabel>{cwdName}</SidebarPanelLabel>
+          <SidebarPanelLabel variant="pane">{cwdName}</SidebarPanelLabel>
         </div>
         <Tip label={showIgnored ? r.hideIgnored : r.showIgnored}>
           <Button

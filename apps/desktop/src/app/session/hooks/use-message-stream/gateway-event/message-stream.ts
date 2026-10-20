@@ -8,6 +8,7 @@ import { playCompletionSound } from '@/lib/completion-sound'
 import { parseErrorSurface } from '@/lib/error-surface'
 import { triggerHaptic } from '@/lib/haptics'
 import { SOMNUS_TOP_UP_URL, somnusAccountOnly } from '@/lib/somnus'
+import { resetAutoReveal } from '@/store/auto-reveal'
 import { billingCtaLabel, clearBillingBlock, runBillingRecovery, setBillingBlock } from '@/store/billing-block'
 import { clearClarifyRequest } from '@/store/clarify'
 import { setSessionCompacting } from '@/store/compaction'
@@ -330,6 +331,9 @@ export function handleMessageStreamEvent(ctx: GatewayEventContext): boolean {
     if (!sessionId) {
       return true
     }
+
+    // Somnus: the turn is over, so the next one may open panes again.
+    resetAutoReveal(sessionId)
 
     // Turn ended — drop any blocking prompt still open for THIS session
     // (e.g. interrupted, or the approval already resolved). Scoped to the

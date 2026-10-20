@@ -64,6 +64,67 @@ const nousAltTint = (pct: number) => `color-mix(in srgb, ${NOUS_ALT_BLUE} ${pct}
 const nousAltTintTransparent = (pct: number) => `color-mix(in srgb, ${NOUS_ALT_BLUE} ${pct}%, transparent)`
 
 export const THEME_PRESET_PALETTES = {
+  /**
+   * Somnus — the house theme, from the "Somnus App v2" design: paper and ink,
+   * no brand hue. Accent strokes (focus, active rows) are the ink itself;
+   * green/red are reserved for pass/fail state.
+   */
+  somnus: {
+    colors: {
+      background: '#ffffff',
+      foreground: '#0a0a0a',
+      card: '#ffffff',
+      cardForeground: '#0a0a0a',
+      muted: '#fafaf9',
+      mutedForeground: '#66656c',
+      popover: '#ffffff',
+      popoverForeground: '#0a0a0a',
+      primary: '#0a0a0a',
+      primaryForeground: '#f3f3f1',
+      secondary: '#efeeeb',
+      secondaryForeground: '#0a0a0a',
+      accent: '#efeeeb',
+      accentForeground: '#0a0a0a',
+      border: 'rgba(0, 0, 0, 0.08)',
+      input: 'rgba(0, 0, 0, 0.14)',
+      ring: '#0a0a0a',
+      midground: '#0a0a0a',
+      composerRing: 'rgba(0, 0, 0, 0.14)',
+      destructive: '#c4453c',
+      destructiveForeground: '#ffffff',
+      sidebarBackground: '#f7f7f5',
+      sidebarBorder: 'rgba(0, 0, 0, 0.08)',
+      userBubble: '#fafaf9',
+      userBubbleBorder: 'rgba(0, 0, 0, 0.08)'
+    },
+    darkColors: {
+      background: '#141417',
+      foreground: '#f3f3f1',
+      card: '#141417',
+      cardForeground: '#f3f3f1',
+      muted: '#18181c',
+      mutedForeground: '#a3a1ae',
+      popover: '#18181c',
+      popoverForeground: '#f3f3f1',
+      primary: '#f3f3f1',
+      primaryForeground: '#0a0a0a',
+      secondary: '#212126',
+      secondaryForeground: '#f3f3f1',
+      accent: '#212126',
+      accentForeground: '#f3f3f1',
+      border: 'rgba(255, 255, 255, 0.08)',
+      input: 'rgba(255, 255, 255, 0.16)',
+      ring: '#f3f3f1',
+      midground: '#f3f3f1',
+      composerRing: 'rgba(255, 255, 255, 0.16)',
+      destructive: '#ff6b5e',
+      destructiveForeground: '#0a0a0a',
+      sidebarBackground: '#0f0f11',
+      sidebarBorder: 'rgba(255, 255, 255, 0.08)',
+      userBubble: '#18181c',
+      userBubbleBorder: 'rgba(255, 255, 255, 0.08)'
+    }
+  },
   github: {
     colors: {
       background: '#ffffff',

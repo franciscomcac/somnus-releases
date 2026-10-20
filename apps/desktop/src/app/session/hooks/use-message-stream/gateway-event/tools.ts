@@ -2,6 +2,7 @@ import { isPreviewableTarget, toolPreviewOutcome } from '@/components/assistant-
 import { reportFirstBuildToolComplete } from '@/components/onboarding-chat/first-build'
 import { toolCallOwnerMessageId } from '@/lib/chat-messages'
 import { invalidateSlashCompletions } from '@/lib/slash-completion-cache'
+import { autoRevealForTool } from '@/store/auto-reveal'
 import { refreshBackgroundProcesses } from '@/store/composer-status'
 import { flashPetActivity, setPetActivity } from '@/store/pet'
 import { recordPreviewArtifact, reofferPreviewArtifact } from '@/store/preview-status'
@@ -66,6 +67,11 @@ export function handleToolEvent(ctx: GatewayEventContext): boolean {
       setPetActivity({ reasoning: false, toolRunning: true })
     }
 
+    // Somnus: the terminal / browser pane opens as the agent starts using it.
+    if (payload && !event.replayed && !sessionInterrupted(sessionId)) {
+      autoRevealForTool(sessionId, 'start', payload, isActiveEvent)
+    }
+
     return true
   }
 
@@ -80,6 +86,11 @@ export function handleToolEvent(ctx: GatewayEventContext): boolean {
       const pendingProduction = !event.replayed && Boolean(toolCallOwnerMessageId(state?.messages ?? [], payload))
 
       upsertToolCall(sessionId, toTodoPayload(payload) ?? payload, 'complete', event.type, occurredAt)
+
+      // Somnus: the Changes pane opens once a file edit has landed.
+      if (payload && !event.replayed && !sessionInterrupted(sessionId) && !payload.error) {
+        autoRevealForTool(sessionId, 'complete', payload, isActiveEvent)
+      }
 
       if (!sessionInterrupted(sessionId) && payload?.name && payload.result !== undefined && event.seq !== undefined) {
         const { previewTarget, status } = toolPreviewOutcome({

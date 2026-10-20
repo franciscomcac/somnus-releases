@@ -126,6 +126,19 @@ afterEach(() => {
 // all 11 tests (2× in a row on PR #93612, plus a main run the same hour).
 // Give this file headroom; the tests are not slow individually.
 describe('CapabilitiesView toolset management', { timeout: 60_000 }, () => {
+  it('never embeds the Hermes skills hub site', async () => {
+    await act(async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/capabilities']}>
+            <CapabilitiesView embedded />
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+    })
+    expect(document.querySelector('iframe')).toBeNull()
+  })
+
   it('renders a switch for each toolset and toggles it off', async () => {
     await renderSkills()
 
@@ -310,7 +323,8 @@ describe('CapabilitiesView toolset management', { timeout: 60_000 }, () => {
     )
   })
 
-  it('mounts the hub iframe lazily and keeps it (hidden) across tab switches', async () => {
+  // Somnus hides the embedded hub (it is Hermes Agent's public site); see SHOW_EMBEDDED_HUB.
+  it.skip('mounts the hub iframe lazily and keeps it (hidden) across tab switches', async () => {
     // On a non-Skills tab the docs-site iframe must not exist at all — an
     // eagerly mounted hub is exactly the Capabilities lag bug.
     await renderSkills() // ?tab=toolsets

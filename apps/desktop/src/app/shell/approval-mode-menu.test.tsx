@@ -42,7 +42,8 @@ describe('approval mode statusbar item', () => {
 
     const statusbar = screen.getByRole('contentinfo')
     const trigger = within(statusbar).getByRole('button', { name: /smart/i })
-    expect(within(statusbar).getAllByRole('button')).toHaveLength(1)
+    // The always-present "Ctrl K commands" hint (Somnus App v2) is not part of the item.
+    expect(within(statusbar).getAllByRole('button').filter(b => !/commands/i.test(b.textContent ?? ''))).toHaveLength(1)
 
     fireEvent.pointerDown(trigger, { button: 0 })
 

@@ -17,8 +17,9 @@ import { $defaultReasoningEffort } from '@/store/session'
 import type { ChatBarState } from './types'
 
 const PILL = cn(
-  'h-(--composer-control-size) shrink-0 gap-1 rounded-md px-2 text-xs font-normal',
-  'text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+  'h-(--composer-control-size) shrink-0 gap-1 rounded-md border border-(--ui-stroke-tertiary) px-2 font-mono text-[0.6875rem] font-normal',
+  // Somnus App v2: bordered mono chip.
+  'text-(--ui-text-secondary) hover:bg-(--chrome-action-hover) hover:text-foreground'
 )
 
 /**

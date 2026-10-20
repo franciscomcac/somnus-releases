@@ -928,6 +928,9 @@ export interface Translations {
       embedsAlways: string
       embedsOff: string
       embedsReset: (count: number) => string
+      /** Somnus: optional, English fallback in the settings row. */
+      autoRevealPanesTitle?: string
+      autoRevealPanesDesc?: string
       resumeLastSessionTitle: string
       resumeLastSessionDesc: string
       product: string
@@ -2591,6 +2594,8 @@ export interface Translations {
     }
     profileRail: string
     nav: Record<string, string>
+    /** Somnus: label for the sidebar's icon row (optional; English fallback). */
+    navToolbarAria?: string
     searchAria: string
     searchPlaceholder: string
     clearSearch: string
@@ -3863,6 +3868,10 @@ export interface Translations {
       errorSendDiagnostics: string
       filesChanged: (count: number) => string
       reviewChanges: string
+      /** Somnus App v2 done card (optional; English fallbacks in the card). */
+      turnDone?: string
+      turnSteps?: (count: number) => string
+      reviewChangesLong?: string
       readAloudFailed: string
       preparingAudio: string
       stopReading: string

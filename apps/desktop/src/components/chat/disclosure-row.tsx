@@ -66,7 +66,12 @@ export function DisclosureRow({
           {action}
         </span>
       )}
-      {trailing && <span className="flex h-(--conversation-line-height) shrink-0 items-center pl-1.5">{trailing}</span>}
+      {trailing && (
+        // Somnus App v2: meta sits at the row's right edge.
+        <span className={cn('flex h-(--conversation-line-height) shrink-0 items-center pl-1.5', !action && 'ml-auto')}>
+          {trailing}
+        </span>
+      )}
     </div>
   )
 }
