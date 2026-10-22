@@ -1,0 +1,69 @@
+# Somnus: build the Linux desktop app for every release and attach it.
+#
+# Lives in franciscomcac/somnus-releases (public, so GitHub runs it for free).
+# The Windows release script publishes the engine snapshot, tags it vX.Y.Z and
+# publishes the GitHub release; that "published" event starts this job, which
+# builds the AppImage + .deb from the SAME tagged snapshot and uploads them,
+# plus latest-linux.yml (what installed AppImages check for updates).
+#
+# Run it by hand for an existing release: Actions > Linux build > Run workflow,
+# tag = v1.0.12.
+name: Linux build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build and attach, e.g. v1.0.12"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: linux-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  linux:
+    # Older Ubuntu = older glibc = the AppImage runs on more distros.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: System packages (native helpers, rpm tooling)
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxi-dev libxtst-dev
+
+      - name: Install dependencies
+        run: npx -y npm@11.17.0 ci --no-audit --no-fund
+
+      - name: Build the app (stamped to this engine commit)
+        working-directory: apps/desktop
+        run: |
+          VERSION="${TAG#v}"
+          # The app installs its engine from this exact commit on first run.
+          export GITHUB_SHA="$(git rev-parse HEAD)"
+          export GITHUB_REF_NAME=main
+          npx -y npm@11.17.0 run build
+          npx -y npm@11.17.0 run builder -- --linux AppImage deb "-c.extraMetadata.version=${VERSION}" --publish never
+          ls -la release
+
+      - name: Attach to the release
+        working-directory: apps/desktop/release
+        run: |
+          VERSION="${TAG#v}"
+          test -f latest-linux.yml && grep -q "version: ${VERSION}" latest-linux.yml
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber \
+            Somnus-*-linux-x86_64.AppImage Somnus-*-linux-amd64.deb latest-linux.yml
