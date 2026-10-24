@@ -10,6 +10,7 @@ import { writeClipboardText } from '@/components/ui/copy-button'
 import { markRightPanePerf } from '@/debug/right-pane-events'
 import { triggerHaptic } from '@/lib/haptics'
 import { isComposerChord } from '@/lib/keybinds/chords'
+import { noteTerminalUserInput } from '@/store/auto-reveal'
 import { $previewTarget } from '@/store/preview'
 import { useTheme } from '@/themes/context'
 
@@ -771,6 +772,7 @@ export function useTerminalSession({
 
     const dataDisposable = term.onData(data => {
       hasSessionActivityRef.current = true
+      noteTerminalUserInput()
       const id = sessionIdRef.current
 
       if (id) {

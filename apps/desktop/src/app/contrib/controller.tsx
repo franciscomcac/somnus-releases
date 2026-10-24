@@ -16,7 +16,6 @@ import { LayoutTreeRoot } from '@/components/pane-shell/tree/renderer'
 import {
   $layoutTree,
   bindPaneVisibility,
-  bindToolPaneCollapse,
   bindTreeSideVisibility,
   declareDefaultTree,
   dismissTreePane,
@@ -60,7 +59,7 @@ import { type KeybindContribution, KEYBINDS_AREA } from '@/lib/keybinds/actions'
 import { isOnboardingEnabled } from '@/lib/onboarding-enabled'
 import { TRANSCRIPT_DIRECTIVE_AREA, type TranscriptDirectiveContribution } from '@/lib/transcript-directives'
 import { setYoloEnabled } from '@/lib/yolo-session'
-import { $interfaceMode, $showsAdvancedChrome, setModeContext, toggleSimpleMode } from '@/store/interface-mode'
+import { $interfaceMode, setModeContext, toggleSimpleMode } from '@/store/interface-mode'
 import {
   $fileBrowserOpen,
   $panesFlipped,
@@ -107,6 +106,8 @@ import {
 } from '../chat/session-tile'
 import { AppContextMenu } from '../context-menu/app-context-menu'
 import { HudShell } from '../hud/hud-shell'
+import { AgentsPane } from '../right-sidebar/agents/agents-pane'
+import { $agentsPaneOpen, dismissAgentsPane, followAgentsPane, showAgentsPane } from '../right-sidebar/agents/store'
 import { $terminalTakeover, setTerminalTakeover } from '../right-sidebar/store'
 import { $workspaceIsPage, WORKSPACE_PAGE_HEADER_AREA } from '../routes'
 
@@ -173,6 +174,10 @@ const workspaceTabDrag = (event: ReactPointerEvent<HTMLElement>, onTap: () => vo
   return true
 }
 
+// Somnus workbench: the right panel's width (Agents · Changes · Terminal). A
+// stack takes its widest tab's size, so these keep it steady across tabs.
+const WORKBENCH_WIDTH = 'clamp(24rem, 36vw, 46rem)'
+
 registry.registerMany([
   {
     id: 'sessions',
@@ -227,6 +232,7 @@ registry.registerMany([
     // its rail there). A real floor left a sliver of unusable terminal.
     data: {
       placement: 'bottom',
+      width: WORKBENCH_WIDTH,
       height: '20vh',
       maxHeight: '80vh',
       lifecycleKeepAlive: true,
@@ -254,6 +260,22 @@ registry.registerMany([
     render: () => idle(<FilesPane />)
   },
   {
+    id: 'agents',
+    area: 'panes',
+    title: 'Agents',
+    // Somnus: the first tab of the workbench panel — one card per agent working
+    // on the chat's task. Hidden until a task fans out to helpers.
+    data: {
+      placement: 'right',
+      collapsible: true,
+      dock: { pane: 'review', pos: 'center', before: 'review' },
+      width: WORKBENCH_WIDTH,
+      minWidth: FILE_BROWSER_MIN_WIDTH,
+      tabTitleText: () => 'Agents'
+    },
+    render: () => idle(<AgentsPane />)
+  },
+  {
     id: 'review',
     area: 'panes',
     title: translateNow('sidebar.review'),
@@ -263,9 +285,8 @@ registry.registerMany([
       placement: 'right',
       collapsible: true,
       revealAliases: [REVIEW_PANE_ID],
-      width: FILE_BROWSER_DEFAULT_WIDTH,
+      width: WORKBENCH_WIDTH,
       minWidth: FILE_BROWSER_MIN_WIDTH,
-      maxWidth: FILE_BROWSER_MAX_WIDTH,
       tabTitle: () => <LocalizedTabTitle select={t => t.sidebar.review} />,
       tabTitleText: () => translateNow('sidebar.review')
     },
@@ -634,17 +655,19 @@ bindPaneVisibility(
   closeReview,
   () => openReview($reviewScopeCwd.get(), $reviewScopeTarget.get())
 )
-// ⌃` / statusbar toggle — the terminal COLLAPSES to a rail (tab stays), not
-// hides; PTYs stay alive while collapsed (see PersistentTerminal). Simple has
-// no terminal: where chrome is off a closed one hides, rail and all, and ⌃`
-// is the door for the session.
-bindToolPaneCollapse(
+// ⌃` / statusbar toggle — Somnus: the terminal is a TAB in the workbench
+// panel, so closing it hides the tab (like Changes and Files) instead of
+// folding the whole panel to a rail. PTYs stay alive while hidden (see
+// PersistentTerminal).
+bindPaneVisibility(
   'terminal',
   $terminalTakeover,
   () => setTerminalTakeover(false),
-  () => setTerminalTakeover(true),
-  $showsAdvancedChrome
+  () => setTerminalTakeover(true)
 )
+// The Agents tab: shown while the chat has helpers at work (see agents-pane).
+bindPaneVisibility('agents', $agentsPaneOpen, dismissAgentsPane, showAgentsPane)
+followAgentsPane()
 // Policies may consult the install: the profile rail stays in Simple when a
 // second profile makes it the only remaining way to switch.
 $profiles.subscribe(profiles => setModeContext({ profileCount: profiles.length }))

@@ -7,9 +7,15 @@ const TAKEOVER_KEY = 'hermes.desktop.terminalTakeover'
 
 // Simple mode rests the terminal closed without touching this preference; ⌃`
 // still brings it up for the session.
-const $terminalTakeoverPref = atom(storedBoolean(TAKEOVER_KEY, false))
+// Somnus: the terminal is session-only. Every launch starts with it closed; it
+// opens when the agent needs it (see store/auto-reveal) or when you open it
+// yourself, and that choice is not carried into the next launch.
+const $terminalTakeoverPref = atom(false)
 
-$terminalTakeoverPref.subscribe(active => persistBoolean(TAKEOVER_KEY, active))
+// Forget the open state older builds saved, so they also start closed.
+if (storedBoolean(TAKEOVER_KEY, false)) {
+  persistBoolean(TAKEOVER_KEY, false)
+}
 
 export const $terminalTakeover = modeBound('terminalOpen', $terminalTakeoverPref, active =>
   $terminalTakeoverPref.set(active)

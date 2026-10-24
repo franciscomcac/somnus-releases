@@ -5,36 +5,22 @@ import { registerBundledPresets } from '@/components/pane-shell/tree/presets'
 // Layout presets — CHAT (main) always dominates.
 // ---------------------------------------------------------------------------
 
-// The REAL default: sessions left, chat main, and the right sidebars in column
-// order main | … | review | file-browser (files outermost). Each is its OWN
-// zone. Review collapses to nothing while its pane is hidden (⌘G off).
-//
-// Preview tiles are DYNAMIC panes (like session tiles), so no preset names one:
-// they're registered by watchPreviewTiles as tabs open, and dockPaneBeside lands
-// each one directly beside the file tree wherever that currently lives — so a
-// file double-click still slides a preview open as its own pane next to the
-// tree, never as a tab stacked into the files sidebar.
+// The REAL default (Somnus workbench): sessions left, chat main, and ONE
+// tabbed panel on the right — Agents · Changes · Terminal · Files — instead of
+// three side-by-side columns. Every tab is toggle-gated (agents while the chat
+// has helpers at work, Changes once there is a diff, the terminal when it is
+// needed, files on ⌘J), so with nothing to show the panel folds away and the
+// chat takes the full width. Previews stack into the same panel as tabs.
+export const WORKBENCH_GROUP_ID = 'grp-work'
+
 export const DEFAULT_TREE = split(
   'row',
   [
     group(['sessions'], { id: 'grp-sessions' }),
     group(['workspace'], { id: 'grp-main' }),
-    split(
-      'column',
-      [
-        split(
-          'row',
-          [group(['review'], { id: 'grp-review' }), group(['files'], { id: 'grp-files' })],
-          [1, 1.2],
-          'spl-rail'
-        ),
-        group(['terminal'], { id: 'grp-terminal' })
-      ],
-      [1.6, 1],
-      'spl-right'
-    )
+    group(['agents', 'review', 'terminal', 'files'], { id: WORKBENCH_GROUP_ID, tabStrip: 'always' })
   ],
-  [1, 3.4, 1.25],
+  [1, 2.9, 2.1],
   'spl-root'
 )
 

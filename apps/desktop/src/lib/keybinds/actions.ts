@@ -153,6 +153,12 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // every platform. Off macOS `ctrl` folds to `mod` (= Ctrl), so it's unchanged.
   // Toggle reveals the terminal (opening one if none exist); Shift spawns a new one.
   { id: 'view.showTerminal', category: 'view', defaults: ['ctrl+`'] },
+  // Somnus workbench: Ctrl+Shift+1…4 jump to the right panel's tabs (Agents, Changes,
+  // Terminal, Files), opening the panel if it is closed.
+  { id: 'view.workbench.agents', category: 'view', defaults: ['ctrl+shift+1'] },
+  { id: 'view.workbench.changes', category: 'view', defaults: ['ctrl+shift+2'] },
+  { id: 'view.workbench.terminal', category: 'view', defaults: ['ctrl+shift+3'] },
+  { id: 'view.workbench.files', category: 'view', defaults: ['ctrl+shift+4'] },
   { id: 'view.newTerminal', category: 'view', defaults: ['ctrl+shift+`'] },
   // Same Ctrl(+Shift) terminal family: arrows walk the (vertical) tab rail, W
   // kills the active one. ⌘W is taken (close preview tab) and ⌘⇧[ ] are profiles,

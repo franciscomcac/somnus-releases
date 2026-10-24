@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 
 import { closeActiveTab } from '@/app/chat/close-tab'
 import { hudTargetSessionId } from '@/app/hud/handoff'
+import { showWorkbenchTab } from '@/app/right-sidebar/agents/workbench'
 import { setTerminalTakeover } from '@/app/right-sidebar/store'
 import { closeActiveTerminal, createTerminal, cycleTerminal } from '@/app/right-sidebar/terminal/terminals'
 import { appViewForPath, isOverlayView } from '@/app/routes'
@@ -261,6 +262,10 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     'view.showBrowser': openBrowserTab,
     'view.toggleHud': () => toggleHud(hudTargetSessionId()),
     'view.showTerminal': () => togglePaneVisible('terminal'),
+    'view.workbench.agents': () => showWorkbenchTab('agents'),
+    'view.workbench.changes': () => showWorkbenchTab('review'),
+    'view.workbench.terminal': () => showWorkbenchTab('terminal'),
+    'view.workbench.files': () => showWorkbenchTab('files'),
     // Create first so the pane's open-effect ensure sees a non-empty set and
     // doesn't also spawn one — net effect is exactly one fresh terminal.
     'view.newTerminal': () => {

@@ -52,7 +52,21 @@ writeKey('hermes.desktop.layoutTree.v1', null)
 
 let defaultTree: LayoutNode | null = null
 
+// Somnus: the workbench layout (one tabbed right panel: Agents · Changes ·
+// Terminal · Files) replaces the old side-by-side columns. Layouts saved before
+// it are retired once, so everyone starts from the new default.
+const WORKBENCH_LAYOUT_KEY = 'somnus.desktop.workbenchLayout.v1'
+
 function loadPersisted(): LayoutNode | null {
+  if (!readKey(WORKBENCH_LAYOUT_KEY)) {
+    if (!isSecondaryWindow() && !isBrowserWindow()) {
+      writeKey(WORKBENCH_LAYOUT_KEY, '1')
+      writeKey(STORAGE_KEY, null)
+    }
+
+    return null
+  }
+
   const parsed = readJson<unknown>(STORAGE_KEY)
 
   // Canonicalize on load: bring attributes onto the current schema (see

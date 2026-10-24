@@ -1,22 +1,44 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { atom } from 'nanostores'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const revealDesktopPane = vi.fn(() => true)
+const $terminalOpen = atom(false)
+
+const revealDesktopPane = vi.fn(() => {
+  $terminalOpen.set(true)
+
+  return true
+})
 const openPreview = vi.fn()
 const revealReview = vi.fn()
+const setTerminalTakeover = vi.fn((open: boolean) => $terminalOpen.set(open))
 
 vi.mock('./pane-focus', () => ({ revealDesktopPane }))
 vi.mock('./preview', () => ({ openPreview }))
 vi.mock('./review', () => ({ revealReview }))
+vi.mock('@/app/right-sidebar/store', () => ({ $terminalTakeover: $terminalOpen, setTerminalTakeover }))
 
-const { $autoRevealPanes, autoRevealForTool, autoRevealPaneFor, browsableUrl, resetAutoReveal } = await import(
-  './auto-reveal'
-)
+const {
+  $autoRevealPanes,
+  autoRevealForTool,
+  autoRevealPaneFor,
+  browsableUrl,
+  noteTerminalUserInput,
+  resetAutoReveal,
+  settleTerminalTool,
+  TERMINAL_REVEAL_DELAY_MS
+} = await import('./auto-reveal')
 
 describe('auto-reveal', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.useFakeTimers()
     $autoRevealPanes.set(true)
+    $terminalOpen.set(false)
     resetAutoReveal('s1')
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('maps tools to panes', () => {
@@ -33,13 +55,49 @@ describe('auto-reveal', () => {
     expect(browsableUrl({ args: { url: 'file:///etc/passwd' } })).toBeNull()
   })
 
-  it('opens the terminal once per turn, and again after the turn ends', () => {
-    expect(autoRevealForTool('s1', 'start', { name: 'terminal' }, true)).toBe('terminal')
-    expect(autoRevealForTool('s1', 'start', { name: 'terminal' }, true)).toBeNull()
+  it('never opens the terminal for a quick command', () => {
+    autoRevealForTool('s1', 'start', { name: 'terminal' }, true)
+    settleTerminalTool('s1', { name: 'terminal' })
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS * 2)
+
+    expect(revealDesktopPane).not.toHaveBeenCalled()
+  })
+
+  it('opens the terminal for a long command, once per turn', () => {
+    autoRevealForTool('s1', 'start', { name: 'terminal' }, true)
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS)
     expect(revealDesktopPane).toHaveBeenCalledTimes(1)
 
+    settleTerminalTool('s1', { name: 'terminal' })
+    autoRevealForTool('s1', 'start', { name: 'terminal' }, true)
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS)
+    expect(revealDesktopPane).toHaveBeenCalledTimes(1)
+  })
+
+  it('folds an auto-opened terminal away when the reply ends', () => {
+    autoRevealForTool('s1', 'start', { name: 'terminal' }, true)
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS)
     resetAutoReveal('s1')
-    expect(autoRevealForTool('s1', 'start', { name: 'terminal' }, true)).toBe('terminal')
+
+    expect(setTerminalTakeover).toHaveBeenCalledWith(false)
+  })
+
+  it('keeps the terminal open once you type into it', () => {
+    autoRevealForTool('s1', 'start', { name: 'terminal' }, true)
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS)
+    noteTerminalUserInput()
+    resetAutoReveal('s1')
+
+    expect(setTerminalTakeover).not.toHaveBeenCalled()
+  })
+
+  it('never folds a terminal you had open yourself', () => {
+    $terminalOpen.set(true)
+    autoRevealForTool('s1', 'start', { name: 'terminal' }, true)
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS)
+    resetAutoReveal('s1')
+
+    expect(setTerminalTakeover).not.toHaveBeenCalled()
   })
 
   it('opens the browser at the page the agent visits', () => {
@@ -59,6 +117,7 @@ describe('auto-reveal', () => {
     expect(autoRevealForTool('s1', 'start', { name: 'terminal' }, false)).toBeNull()
     $autoRevealPanes.set(false)
     expect(autoRevealForTool('s1', 'start', { name: 'terminal' }, true)).toBeNull()
+    vi.advanceTimersByTime(TERMINAL_REVEAL_DELAY_MS * 2)
     expect(revealDesktopPane).not.toHaveBeenCalled()
   })
 })

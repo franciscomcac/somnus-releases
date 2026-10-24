@@ -473,6 +473,11 @@ export function TreeGroup({
       // Advertises the visible tab strip so panes can drop their own
       // self-naming labels (see [data-pane-self-label] in styles.css).
       data-zone-header={headerVisible || undefined}
+      // Somnus workbench: zones that aren't the chat or the session list are
+      // drawn as rounded cards (styles.css, [data-zone-role='tool']).
+      data-zone-role={
+        node.panes.includes('workspace') ? 'main' : node.panes.includes('sessions') ? 'sessions' : 'tool'
+      }
       // The zone menu opens from the strip, the rail, the edit veil and the
       // body. Only the strip can name a chip, so resolve the target HERE for
       // every one of them — otherwise a right-click off the strip reused the

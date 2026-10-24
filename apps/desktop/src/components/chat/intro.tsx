@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { capitalize, normalize } from '@/lib/text'
 
@@ -176,12 +176,34 @@ export function Intro({ personality, seed }: IntroProps) {
   )
 }
 
-/** The ring-and-dot mark from the Somnus App v2 design. */
+/** The Somnus logo: a crescent moon with two four-point stars, the same
+ *  mark as the app icon, drawn in the text colour so it follows the theme.
+ *  It breathes quietly: the moon sways a few degrees and the stars twinkle
+ *  out of step (styles.css, .somnus-mark-*). */
 function SomnusMark({ className }: { className?: string }) {
+  const maskId = `somnus-mark-${useId().replace(/:/g, '')}`
+
   return (
     <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 44 44">
-      <circle cx="22" cy="22" r="19.5" stroke="currentColor" strokeWidth="2.5" />
-      <circle cx="22" cy="22" fill="currentColor" r="6.5" />
+      <defs>
+        <mask id={maskId}>
+          <rect fill="#fff" height="44" width="44" />
+          <circle cx="24" cy="18" fill="#000" r="13.5" />
+        </mask>
+      </defs>
+      <g className="somnus-mark-moon">
+        <circle cx="18.5" cy="24" fill="currentColor" mask={`url(#${maskId})`} r="15" />
+      </g>
+      <path
+        className="somnus-mark-star"
+        d="M33 4.5 Q33.9 9.1 38.5 10 Q33.9 10.9 33 15.5 Q32.1 10.9 27.5 10 Q32.1 9.1 33 4.5Z"
+        fill="currentColor"
+      />
+      <path
+        className="somnus-mark-star somnus-mark-star-late"
+        d="M38 20 Q38.5 22.5 41 23 Q38.5 23.5 38 26 Q37.5 23.5 35 23 Q37.5 22.5 38 20Z"
+        fill="currentColor"
+      />
     </svg>
   )
 }

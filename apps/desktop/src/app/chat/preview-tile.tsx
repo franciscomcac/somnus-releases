@@ -12,7 +12,7 @@
 
 import { useStore } from '@nanostores/react'
 
-import { findGroup } from '@/components/pane-shell/tree/model'
+import { findGroup, findGroupOfPane } from '@/components/pane-shell/tree/model'
 import { $activeTreeGroup, $layoutTree, revealTreePane, treePanesWithPrefix } from '@/components/pane-shell/tree/store'
 import { type MenuKit, renderActionItem } from '@/components/ui/actions-menu'
 import { FileTypeIcon } from '@/components/ui/file-type-icon'
@@ -187,8 +187,19 @@ function existingPreviewAnchor(tabId: string): string | undefined {
 
   const other = $dockedPreviewTabs.get().find(tab => tab.id !== tabId)
 
-  return other ? previewPaneId(other.id) : undefined
+  if (other) {
+    return previewPaneId(other.id)
+  }
+
+  // Somnus workbench: the first preview joins the right panel as a tab
+  // (beside Agents · Changes · Terminal · Files) instead of splitting a new
+  // column off the chat.
+  const tree = $layoutTree.get()
+
+  return tree ? WORKBENCH_PANES.find(id => findGroupOfPane(tree, id)) : undefined
 }
+
+const WORKBENCH_PANES = ['agents', 'review', 'terminal', 'files'] as const
 
 /** Keep pane contributions mirroring `$previewTabs`, keep the store's selection
  *  and the tree's active pane agreeing, and front a tile when its tab is

@@ -557,10 +557,18 @@ const DEV_SERVER = process.env.HERMES_DESKTOP_DEV_SERVER
 const IS_PACKAGED = app.isPackaged || Boolean(process.env.HERMES_DESKTOP_IS_PACKAGED)
 const IS_MAC = process.platform === 'darwin'
 const IS_WINDOWS = process.platform === 'win32'
+
 // Somnus: installed Windows builds update themselves from GitHub Releases
 // (electron-updater). The upstream git-pull-and-rebuild updater is disabled for
 // them: customers never build anything on their own computer.
-const SOMNUS_AUTO_UPDATE = app.isPackaged && IS_WINDOWS && process.env.SOMNUS_DISABLE_AUTO_UPDATE !== '1'
+// Somnus: self-update where electron-updater can swap the app without a password prompt —
+// the Windows installer and the Linux AppImage ($APPIMAGE is set when running from one).
+// .deb installs update by installing the newer .deb.
+const SOMNUS_AUTO_UPDATE =
+  app.isPackaged &&
+  (IS_WINDOWS || (process.platform === 'linux' && Boolean(process.env.APPIMAGE))) &&
+  process.env.SOMNUS_DISABLE_AUTO_UPDATE !== '1'
+
 const IS_WSL = isWslEnvironment()
 // Truthful macOS kernel major (Tahoe = 25). Product version lies (16 vs 26) per
 // build SDK, so gate Tahoe workarounds on Darwin instead.

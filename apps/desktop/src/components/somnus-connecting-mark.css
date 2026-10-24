@@ -1,0 +1,232 @@
+/* Somnus connecting mark: a drifting crescent, an orbiting star and a breathing
+   halo on one 6s cycle, so the loop is seamless. Colours follow currentColor. */
+.sc-stage {
+  --sc-t: 6s;
+  --sc-soft: color-mix(in srgb, currentColor 12%, transparent);
+  --sc-glow: color-mix(in srgb, currentColor 7%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 34px;
+  animation: sc-enter 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.sc-mark {
+  position: relative;
+  width: 132px;
+  height: 132px;
+}
+
+.sc-mark svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sc-halo {
+  position: absolute;
+  inset: -28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sc-glow) 0%, transparent 68%);
+  animation: sc-breathe var(--sc-t) ease-in-out infinite;
+}
+
+.sc-moon {
+  transform-origin: 66px 66px;
+  animation: sc-drift var(--sc-t) ease-in-out infinite;
+}
+
+.sc-shade {
+  animation: sc-phase var(--sc-t) ease-in-out infinite;
+}
+
+.sc-ring {
+  fill: none;
+  stroke: var(--sc-soft);
+  stroke-width: 1;
+}
+
+.sc-orbit {
+  transform-origin: 66px 66px;
+  animation: sc-spin var(--sc-t) linear infinite;
+}
+
+.sc-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    sc-spin-back var(--sc-t) linear infinite,
+    sc-twinkle calc(var(--sc-t) / 2) ease-in-out infinite;
+}
+
+.sc-dust circle {
+  fill: currentColor;
+  animation: sc-dust var(--sc-t) ease-in-out infinite;
+}
+
+.sc-dust circle:nth-child(2) {
+  animation-delay: calc(var(--sc-t) * -0.33);
+}
+
+.sc-dust circle:nth-child(3) {
+  animation-delay: calc(var(--sc-t) * -0.66);
+}
+
+.sc-dust circle:nth-child(4) {
+  animation-delay: calc(var(--sc-t) * -0.5);
+}
+
+.sc-word {
+  margin-right: -0.62em;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.62em;
+}
+
+.sc-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.sc-label {
+  margin-right: -0.5em;
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  opacity: 0.55;
+}
+
+.sc-label span {
+  display: inline-block;
+  animation: sc-wave calc(var(--sc-t) / 2) ease-in-out infinite;
+}
+
+.sc-line {
+  position: relative;
+  width: 120px;
+  height: 1px;
+  overflow: hidden;
+  background: var(--sc-soft);
+}
+
+.sc-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  animation: sc-flow calc(var(--sc-t) / 2) cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes sc-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes sc-breathe {
+  0%,
+  100% {
+    transform: scale(0.88);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes sc-drift {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes sc-phase {
+  0%,
+  100% {
+    transform: translate(17px, -9px);
+  }
+  50% {
+    transform: translate(27px, -14px);
+  }
+}
+
+@keyframes sc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sc-spin-back {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes sc-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes sc-dust {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  40%,
+  60% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes sc-wave {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sc-flow {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-stage * {
+    animation-duration: calc(var(--sc-t) * 3) !important;
+  }
+
+  .sc-line::after {
+    animation-duration: calc(var(--sc-t) * 3) !important;
+  }
+
+  .sc-orbit,
+  .sc-star {
+    animation: none !important;
+  }
+}

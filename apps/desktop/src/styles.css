@@ -101,7 +101,9 @@
   font-weight: 400 700;
   font-display: swap;
   src: url('./fonts/InstrumentSans-Latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Instrument Sans';
@@ -109,7 +111,9 @@
   font-weight: 400 700;
   font-display: swap;
   src: url('./fonts/InstrumentSans-LatinExt.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
   font-family: 'Instrument Serif';
@@ -3718,4 +3722,87 @@ html[data-hud-window] [data-slot='popover-content'] {
 
 [data-hud-shell] [data-slot='composer-bounds'] *::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Somnus workbench ──────────────────────────────────────────────────────
+   Tool zones (the right panel with Agents · Changes · Terminal · Files, a
+   preview, logs) float as rounded cards on the shell's sidebar tone, with a
+   small gap around them; the chat and the session list stay flat. */
+[data-tree-group][data-zone-role='tool'] {
+  margin: 0.5rem 0.5rem 0.5rem 0.25rem;
+  border: 1px solid var(--ui-stroke-tertiary);
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+}
+
+[data-tree-group][data-zone-role='tool'] > [data-panel-header] {
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+}
+
+/* The indeterminate bar on a working agent's card. */
+.somnus-agent-progress {
+  animation: somnus-agent-progress 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes somnus-agent-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .somnus-agent-progress {
+    animation-duration: 4.8s;
+  }
+}
+
+/* Somnus home logo: a slow, quiet loop. The moon sways a few degrees and the
+   two stars twinkle out of step, so the mark feels alive without drawing the
+   eye away from the composer. */
+.somnus-mark-moon {
+  transform-box: fill-box;
+  transform-origin: 55% 45%;
+  animation: somnus-mark-sway 8s ease-in-out infinite;
+}
+
+.somnus-mark-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: somnus-mark-twinkle 4s ease-in-out infinite;
+}
+
+.somnus-mark-star-late {
+  animation-delay: -2s;
+}
+
+@keyframes somnus-mark-sway {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes somnus-mark-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.72);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .somnus-mark-moon,
+  .somnus-mark-star {
+    animation: none;
+  }
 }

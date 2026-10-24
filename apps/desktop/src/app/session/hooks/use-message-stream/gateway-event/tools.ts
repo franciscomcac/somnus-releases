@@ -2,7 +2,7 @@ import { isPreviewableTarget, toolPreviewOutcome } from '@/components/assistant-
 import { reportFirstBuildToolComplete } from '@/components/onboarding-chat/first-build'
 import { toolCallOwnerMessageId } from '@/lib/chat-messages'
 import { invalidateSlashCompletions } from '@/lib/slash-completion-cache'
-import { autoRevealForTool } from '@/store/auto-reveal'
+import { autoRevealForTool, settleTerminalTool } from '@/store/auto-reveal'
 import { refreshBackgroundProcesses } from '@/store/composer-status'
 import { flashPetActivity, setPetActivity } from '@/store/pet'
 import { recordPreviewArtifact, reofferPreviewArtifact } from '@/store/preview-status'
@@ -86,6 +86,11 @@ export function handleToolEvent(ctx: GatewayEventContext): boolean {
       const pendingProduction = !event.replayed && Boolean(toolCallOwnerMessageId(state?.messages ?? [], payload))
 
       upsertToolCall(sessionId, toTodoPayload(payload) ?? payload, 'complete', event.type, occurredAt)
+
+      // Somnus: a quick terminal command finished before its pane was due.
+      if (payload) {
+        settleTerminalTool(sessionId, payload)
+      }
 
       // Somnus: the Changes pane opens once a file edit has landed.
       if (payload && !event.replayed && !sessionInterrupted(sessionId) && !payload.error) {

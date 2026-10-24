@@ -46,6 +46,8 @@ describe('enforced dock (stacked Bots pane → sessions-zone tab, every boot)', 
 
   async function setupTree(initialTree: object, options: { routines?: boolean } = {}) {
     window.localStorage.setItem(TREE_KEY, JSON.stringify(initialTree))
+    // Already on the Somnus workbench layout, so the saved tree is kept.
+    window.localStorage.setItem('somnus.desktop.workbenchLayout.v1', '1')
 
     const tree = await import('@/components/pane-shell/tree/store')
     const model = await import('@/components/pane-shell/tree/model')
